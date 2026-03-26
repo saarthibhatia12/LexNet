@@ -1,0 +1,12 @@
+﻿{
+  "labels": [
+    "PERSON",
+    "PROPERTY_ID",
+    "SURVEY_NUMBER",
+    "DATE",
+    "MONETARY_VALUE",
+    "JURISDICTION",
+    "LEGAL_SECTION",
+    "ORGANISATION"
+  ]
+}

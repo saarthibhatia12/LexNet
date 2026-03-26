@@ -1,0 +1,5 @@
+﻿pyserial
+pyjwt
+requests
+python-dotenv
+pytest
