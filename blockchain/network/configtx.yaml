@@ -1,2 +1,158 @@
-﻿# LexNet scaffold
+---
+Organizations:
+  - &OrdererOrg
+    Name: OrdererMSP
+    ID: OrdererMSP
+    MSPDir: crypto-config/ordererOrganizations/lexnet.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &GovtOrg
+    Name: GovtOrgMSP
+    ID: GovtOrgMSP
+    MSPDir: crypto-config/peerOrganizations/govtorg.lexnet.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('GovtOrgMSP.admin', 'GovtOrgMSP.peer', 'GovtOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('GovtOrgMSP.admin', 'GovtOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('GovtOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('GovtOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.govtorg.lexnet.local
+        Port: 7051
+
+  - &VerifierOrg
+    Name: VerifierOrgMSP
+    ID: VerifierOrgMSP
+    MSPDir: crypto-config/peerOrganizations/verifierorg.lexnet.local/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('VerifierOrgMSP.admin', 'VerifierOrgMSP.peer', 'VerifierOrgMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('VerifierOrgMSP.admin', 'VerifierOrgMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('VerifierOrgMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('VerifierOrgMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.verifierorg.lexnet.local
+        Port: 9051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "ANY Endorsement"
+    Endorsement:
+      Type: Signature
+      Rule: "AND('GovtOrgMSP.member')"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.lexnet.local:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.lexnet.local
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  LexNetOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Consortiums:
+      LexNetConsortium:
+        Organizations:
+          - *GovtOrg
+          - *VerifierOrg
+
+  LexNetChannel:
+    Consortium: LexNetConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *GovtOrg
+        - *VerifierOrg
+      Capabilities:
+        <<: *ApplicationCapabilities
 

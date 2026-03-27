@@ -1,2 +1,24 @@
-﻿# LexNet scaffold
+---
+OrdererOrgs:
+  - Name: Orderer
+    Domain: lexnet.local
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: GovtOrg
+    Domain: govtorg.lexnet.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: VerifierOrg
+    Domain: verifierorg.lexnet.local
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
 

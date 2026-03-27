@@ -16,3 +16,9 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+blockchain/chaincode/lexnet-cc/.gomodcache/
+blockchain/chaincode/lexnet-cc/lexnet-cc
+blockchain/network/channel-artifacts/
+blockchain/network/crypto-config/
+blockchain/network/fabric-ca/
+fabric-samples/

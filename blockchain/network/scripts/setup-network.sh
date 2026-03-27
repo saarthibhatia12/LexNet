@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -11,6 +11,7 @@ CHAINCODE_LABEL="${CHAINCODE_LABEL:-lexnet-cc_1.0}"
 CHAINCODE_LANG="${CHAINCODE_LANG:-golang}"
 CHAINCODE_SRC_PATH="${CHAINCODE_SRC_PATH:-/opt/gopath/src/chaincode/lexnet-cc}"
 CHAINCODE_PACKAGE="/etc/hyperledger/fabric/channel-artifacts/${CHAINCODE_NAME}.tar.gz"
+INSTALL_CHAINCODE="${INSTALL_CHAINCODE:-false}"
 
 ORDERER_CA="/etc/hyperledger/fabric/crypto/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/msp/tlscacerts/tlsca.lexnet.local-cert.pem"
 CHANNEL_TX="/etc/hyperledger/fabric/channel-artifacts/${CHANNEL_NAME}.tx"
@@ -47,23 +48,43 @@ wait_for_running() {
 }
 
 run_govt_peer() {
-	docker exec \
-		-e CORE_PEER_LOCALMSPID=GovtOrgMSP \
-		-e CORE_PEER_TLS_ENABLED=true \
-		-e CORE_PEER_ADDRESS=peer0.govtorg.lexnet.local:7051 \
-		-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/tls/ca.crt \
-		-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/users/Admin@govtorg.lexnet.local/msp \
-		peer0.govtorg.lexnet.local "$@"
+	if [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == cygwin* ]]; then
+		MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*" docker exec \
+			-e CORE_PEER_LOCALMSPID=GovtOrgMSP \
+			-e CORE_PEER_TLS_ENABLED=true \
+			-e CORE_PEER_ADDRESS=peer0.govtorg.lexnet.local:7051 \
+			-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/tls/ca.crt \
+			-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/users/Admin@govtorg.lexnet.local/msp \
+			peer0.govtorg.lexnet.local "$@"
+	else
+		docker exec \
+			-e CORE_PEER_LOCALMSPID=GovtOrgMSP \
+			-e CORE_PEER_TLS_ENABLED=true \
+			-e CORE_PEER_ADDRESS=peer0.govtorg.lexnet.local:7051 \
+			-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/tls/ca.crt \
+			-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/users/Admin@govtorg.lexnet.local/msp \
+			peer0.govtorg.lexnet.local "$@"
+	fi
 }
 
 run_verifier_peer() {
-	docker exec \
-		-e CORE_PEER_LOCALMSPID=VerifierOrgMSP \
-		-e CORE_PEER_TLS_ENABLED=true \
-		-e CORE_PEER_ADDRESS=peer0.verifierorg.lexnet.local:9051 \
-		-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/tls/ca.crt \
-		-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/users/Admin@verifierorg.lexnet.local/msp \
-		peer0.verifierorg.lexnet.local "$@"
+	if [[ "${OSTYPE:-}" == msys* || "${OSTYPE:-}" == cygwin* ]]; then
+		MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*" docker exec \
+			-e CORE_PEER_LOCALMSPID=VerifierOrgMSP \
+			-e CORE_PEER_TLS_ENABLED=true \
+			-e CORE_PEER_ADDRESS=peer0.verifierorg.lexnet.local:9051 \
+			-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/tls/ca.crt \
+			-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/users/Admin@verifierorg.lexnet.local/msp \
+			peer0.verifierorg.lexnet.local "$@"
+	else
+		docker exec \
+			-e CORE_PEER_LOCALMSPID=VerifierOrgMSP \
+			-e CORE_PEER_TLS_ENABLED=true \
+			-e CORE_PEER_ADDRESS=peer0.verifierorg.lexnet.local:9051 \
+			-e CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/tls/ca.crt \
+			-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/users/Admin@verifierorg.lexnet.local/msp \
+			peer0.verifierorg.lexnet.local "$@"
+	fi
 }
 
 require_tool docker
@@ -123,26 +144,31 @@ run_verifier_peer peer channel update \
 	--tls \
 	--cafile "${ORDERER_CA}"
 
-if [[ -f "${NETWORK_DIR}/../chaincode/lexnet-cc/go.mod" ]]; then
-	log "Packaging chaincode ${CHAINCODE_NAME}"
-	run_govt_peer peer lifecycle chaincode package "${CHAINCODE_PACKAGE}" \
-		--path "${CHAINCODE_SRC_PATH}" \
-		--lang "${CHAINCODE_LANG}" \
-		--label "${CHAINCODE_LABEL}"
+if [[ "${INSTALL_CHAINCODE}" == "true" ]]; then
+	if [[ -f "${NETWORK_DIR}/../chaincode/lexnet-cc/go.mod" ]]; then
+		log "Packaging chaincode ${CHAINCODE_NAME}"
+		run_govt_peer peer lifecycle chaincode package "${CHAINCODE_PACKAGE}" \
+			--path "${CHAINCODE_SRC_PATH}" \
+			--lang "${CHAINCODE_LANG}" \
+			--label "${CHAINCODE_LABEL}"
 
-	log "Installing chaincode package on GovtOrg peer"
-	run_govt_peer peer lifecycle chaincode install "${CHAINCODE_PACKAGE}"
+		log "Installing chaincode package on GovtOrg peer"
+		run_govt_peer peer lifecycle chaincode install "${CHAINCODE_PACKAGE}"
 
-	log "Installing chaincode package on VerifierOrg peer"
-	run_verifier_peer peer lifecycle chaincode install "${CHAINCODE_PACKAGE}"
+		log "Installing chaincode package on VerifierOrg peer"
+		run_verifier_peer peer lifecycle chaincode install "${CHAINCODE_PACKAGE}"
 
-	log "Installed chaincodes on GovtOrg peer"
-	run_govt_peer peer lifecycle chaincode queryinstalled
+		log "Installed chaincodes on GovtOrg peer"
+		run_govt_peer peer lifecycle chaincode queryinstalled
 
-	log "Installed chaincodes on VerifierOrg peer"
-	run_verifier_peer peer lifecycle chaincode queryinstalled
+		log "Installed chaincodes on VerifierOrg peer"
+		run_verifier_peer peer lifecycle chaincode queryinstalled
+	else
+		log "Chaincode source not found at ../chaincode/lexnet-cc; cannot run lifecycle package/install."
+		exit 1
+	fi
 else
-	log "Chaincode source not found at ../chaincode/lexnet-cc; skipping lifecycle package/install."
+	log "INSTALL_CHAINCODE=false, skipping lifecycle package/install for now."
 fi
 
 log "Network setup complete"

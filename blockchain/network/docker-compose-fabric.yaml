@@ -1,2 +1,157 @@
-﻿# LexNet scaffold
+version: "3.8"
+
+networks:
+  lexnet_fabric:
+    name: lexnet_fabric
+
+services:
+  ca_govtorg:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca_govtorg
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-govtorg
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
+    ports:
+      - "7054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./fabric-ca/govtorg:/etc/hyperledger/fabric-ca-server
+    networks:
+      - lexnet_fabric
+
+  ca_verifierorg:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca_verifierorg
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-verifierorg
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
+    ports:
+      - "8054:7054"
+    command: sh -c 'fabric-ca-server start -b admin:adminpw -d'
+    volumes:
+      - ./fabric-ca/verifierorg:/etc/hyperledger/fabric-ca-server
+    networks:
+      - lexnet_fabric
+
+  orderer.lexnet.local:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer.lexnet.local
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.lexnet.local:9443
+      - ORDERER_METRICS_PROVIDER=prometheus
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/orderer
+    command: orderer
+    ports:
+      - "7050:7050"
+      - "9443:9443"
+    volumes:
+      - ./channel-artifacts/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./crypto-config/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/tls:/var/hyperledger/orderer/tls
+    networks:
+      - lexnet_fabric
+
+  peer0.govtorg.lexnet.local:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.govtorg.lexnet.local
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=lexnet_fabric
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.govtorg.lexnet.local
+      - CORE_PEER_ADDRESS=peer0.govtorg.lexnet.local:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.govtorg.lexnet.local:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.govtorg.lexnet.local:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.govtorg.lexnet.local:7051
+      - CORE_PEER_LOCALMSPID=GovtOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.govtorg.lexnet.local:9444
+      - CORE_METRICS_PROVIDER=prometheus
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+      - "9444:9444"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./channel-artifacts:/etc/hyperledger/fabric/channel-artifacts
+      - ./crypto-config:/etc/hyperledger/fabric/crypto
+      - ./crypto-config/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/msp:/etc/hyperledger/fabric/msp
+      - ./crypto-config/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/tls:/etc/hyperledger/fabric/tls
+      - ../chaincode/lexnet-cc:/opt/gopath/src/chaincode/lexnet-cc
+    depends_on:
+      - orderer.lexnet.local
+    networks:
+      - lexnet_fabric
+
+  peer0.verifierorg.lexnet.local:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.verifierorg.lexnet.local
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=lexnet_fabric
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.verifierorg.lexnet.local
+      - CORE_PEER_ADDRESS=peer0.verifierorg.lexnet.local:9051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:9051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.verifierorg.lexnet.local:9052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.verifierorg.lexnet.local:9051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.verifierorg.lexnet.local:9051
+      - CORE_PEER_LOCALMSPID=VerifierOrgMSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.verifierorg.lexnet.local:9445
+      - CORE_METRICS_PROVIDER=prometheus
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - "9051:9051"
+      - "9052:9052"
+      - "9445:9445"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./channel-artifacts:/etc/hyperledger/fabric/channel-artifacts
+      - ./crypto-config:/etc/hyperledger/fabric/crypto
+      - ./crypto-config/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/msp:/etc/hyperledger/fabric/msp
+      - ./crypto-config/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/tls:/etc/hyperledger/fabric/tls
+      - ../chaincode/lexnet-cc:/opt/gopath/src/chaincode/lexnet-cc
+    depends_on:
+      - orderer.lexnet.local
+    networks:
+      - lexnet_fabric
 
