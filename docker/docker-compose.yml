@@ -1,2 +1,77 @@
-﻿version: '3.8'
-services: {}
+version: "3.8"
+
+services:
+  neo4j:
+    image: neo4j:5-community
+    container_name: lexnet-neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/lexnet-neo4j-pass
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "cypher-shell",
+          "-u",
+          "neo4j",
+          "-p",
+          "lexnet-neo4j-pass",
+          "RETURN 1;",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ipfs:
+    image: ipfs/kubo:v0.27.0
+    container_name: lexnet-ipfs
+    ports:
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ipfs_data:/data/ipfs
+    healthcheck:
+      test: ["CMD-SHELL", "ipfs id >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nlp:
+    build:
+      context: ..
+      dockerfile: docker/nlp.Dockerfile
+    container_name: lexnet-nlp
+    env_file:
+      - ../nlp/.env
+    ports:
+      - "5500:5500"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
+    volumes:
+      - nlp_models:/app/models
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "from urllib.request import urlopen; urlopen('http://127.0.0.1:5500/nlp/health', timeout=5).read()",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  neo4j_data:
+  neo4j_logs:
+  ipfs_data:
+  nlp_models:
+    name: lexnet_nlp_models

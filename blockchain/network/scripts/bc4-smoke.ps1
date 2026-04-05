@@ -104,7 +104,7 @@ function Invoke-GovtCommand {
         throw "GovtOrg command failed: $Command`n$output"
     }
 
-    return $output
+    return ($output -join [Environment]::NewLine)
 }
 
 function Invoke-VerifierCommand {
@@ -131,7 +131,7 @@ function Invoke-VerifierCommand {
         throw "VerifierOrg command failed: $Command`n$output"
     }
 
-    return $output
+    return ($output -join [Environment]::NewLine)
 }
 
 function Copy-ToGovtContainer {
