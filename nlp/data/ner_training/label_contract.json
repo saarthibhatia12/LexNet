@@ -1,0 +1,25 @@
+{
+  "canonicalLabels": [
+    "PERSON",
+    "PROPERTY_ID",
+    "SURVEY_NUMBER",
+    "DATE",
+    "MONETARY_VALUE",
+    "JURISDICTION",
+    "LEGAL_SECTION",
+    "ORGANISATION"
+  ],
+  "aliases": {
+    "FAC": "JURISDICTION",
+    "GPE": "JURISDICTION",
+    "LAW": "LEGAL_SECTION",
+    "LOC": "JURISDICTION",
+    "MONEY": "MONETARY_VALUE",
+    "ORG": "ORGANISATION",
+    "PER": "PERSON"
+  },
+  "annotationGuidance": {
+    "explicitSurveyNumberLabel": "SURVEY_NUMBER",
+    "syNoLabel": "PROPERTY_ID"
+  }
+}

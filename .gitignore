@@ -22,3 +22,4 @@ blockchain/network/channel-artifacts/
 blockchain/network/crypto-config/
 blockchain/network/fabric-ca/
 fabric-samples/
+nlp/models/
