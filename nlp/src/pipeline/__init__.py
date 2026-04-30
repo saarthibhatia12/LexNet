@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["extract_entities", "extract_relations", "extract_text_from_pdf"]
+__all__ = ["compute_risk_score", "extract_entities", "extract_relations", "extract_text_from_pdf"]
 
 
 def __getattr__(name: str) -> object:
@@ -8,6 +8,10 @@ def __getattr__(name: str) -> object:
         from src.pipeline.ner import extract_entities
 
         return extract_entities
+    if name == "compute_risk_score":
+        from src.pipeline.conflict import compute_risk_score
+
+        return compute_risk_score
     if name == "extract_relations":
         from src.pipeline.rel_extract import extract_relations
 
