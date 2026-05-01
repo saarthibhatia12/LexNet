@@ -22,6 +22,7 @@ Usage:
 
 import argparse
 import logging
+import socket
 import sys
 import time
 from typing import Optional
@@ -326,7 +327,16 @@ def main() -> None:
 
     # Import config (loads .env at import time)
     # Deferred import to allow tests to run without .env
-    from . import config as cfg
+    try:
+        from . import config as cfg
+    except EnvironmentError as exc:
+        logging.basicConfig(
+            level=logging.ERROR,
+            format="%(asctime)s [BRIDGE] %(levelname)s %(message)s",
+            datefmt="%H:%M:%S",
+        )
+        logger.error("Configuration error: %s", exc)
+        sys.exit(1)
 
     # Setup logging
     log_level = "DEBUG" if args.verbose else cfg.BRIDGE_LOG_LEVEL
@@ -345,12 +355,20 @@ def main() -> None:
     )
 
     # Open port
-    if args.tcp:
-        logger.info("Connecting via TCP to %s:%d", args.tcp_host, args.tcp_port)
-        port = open_tcp_port(args.tcp_host, args.tcp_port)
-    else:
-        logger.info("Opening serial port %s @ %d baud", args.serial, cfg.BAUD_RATE)
-        port = open_serial_port(args.serial, cfg.BAUD_RATE)
+    try:
+        if args.tcp:
+            logger.info("Connecting via TCP to %s:%d", args.tcp_host, args.tcp_port)
+            port = open_tcp_port(args.tcp_host, args.tcp_port)
+        else:
+            assert args.serial is not None
+            logger.info("Opening serial port %s @ %d baud", args.serial, cfg.BAUD_RATE)
+            port = open_serial_port(args.serial, cfg.BAUD_RATE)
+    except (ConnectionError, ConnectionRefusedError, socket.timeout, OSError) as exc:
+        logger.error("Failed to open bridge transport: %s", exc)
+        sys.exit(1)
+    except serial.SerialException as exc:
+        logger.error("Failed to open serial port: %s", exc)
+        sys.exit(1)
 
     try:
         run_bridge_loop(port, bridge_config)

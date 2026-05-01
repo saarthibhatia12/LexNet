@@ -27,6 +27,14 @@ def _get_required_env(key: str) -> str:
     return value.strip()
 
 
+def _get_optional_env(key: str) -> str | None:
+    """Get an optional environment variable, returning None when unset."""
+    value = os.getenv(key)
+    if value is None or value.strip() == "":
+        return None
+    return value.strip()
+
+
 def _get_env_int(key: str, default: int) -> int:
     """Get an environment variable as an integer with a default."""
     raw = os.getenv(key)
@@ -41,7 +49,7 @@ def _get_env_int(key: str, default: int) -> int:
 
 
 # --- Serial / UART Configuration ---
-SERIAL_PORT: str = _get_required_env("SERIAL_PORT")
+SERIAL_PORT: str | None = _get_optional_env("SERIAL_PORT")
 BAUD_RATE: int = _get_env_int("BAUD_RATE", 57600)
 
 # --- Authentication ---
@@ -84,6 +92,12 @@ def _validate_config() -> None:
     if BRIDGE_LOG_LEVEL not in valid_levels:
         raise EnvironmentError(
             f"BRIDGE_LOG_LEVEL must be one of {valid_levels}, got {BRIDGE_LOG_LEVEL!r}"
+        )
+
+    if SERIAL_PORT is None:
+        logging.info(
+            "SERIAL_PORT is not configured. This is fine for TCP simulator mode; "
+            "set it only when running the bridge in serial mode."
         )
 
 
