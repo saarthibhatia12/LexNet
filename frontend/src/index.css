@@ -1,3 +1,261 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================================
+   LexNet — Global Styles
+   ============================================================================ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface-900 text-surface-50 font-sans;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* Custom scrollbar (Webkit) */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-800;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lexnet-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-lexnet-600;
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: theme('colors.lexnet.700') theme('colors.surface.800');
+  }
+
+  /* Focus ring for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-lexnet-500 ring-offset-2 ring-offset-surface-900;
+  }
+}
+
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-surface-800/60 backdrop-blur-xl border border-surface-700/50 rounded-lexnet shadow-lexnet;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
+           bg-lexnet-600 text-white font-medium rounded-lexnet
+           hover:bg-lexnet-500 active:bg-lexnet-700
+           transition-all duration-200 ease-out
+           shadow-md hover:shadow-glow
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md;
+  }
+
+  /* Secondary / outline button */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
+           bg-transparent text-lexnet-300 font-medium rounded-lexnet
+           border border-lexnet-600/50
+           hover:bg-lexnet-900/50 hover:text-lexnet-200 hover:border-lexnet-500
+           active:bg-lexnet-800
+           transition-all duration-200 ease-out
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Accent / success button */
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5
+           bg-accent-600 text-white font-medium rounded-lexnet
+           hover:bg-accent-500 active:bg-accent-700
+           transition-all duration-200 ease-out
+           shadow-md hover:shadow-glow-accent
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Text input */
+  .input-field {
+    @apply w-full px-4 py-2.5
+           bg-surface-800 text-surface-50 placeholder-surface-200/40
+           border border-surface-700/50 rounded-lexnet
+           focus:border-lexnet-500 focus:ring-1 focus:ring-lexnet-500
+           transition-colors duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Label */
+  .input-label {
+    @apply block text-sm font-medium text-surface-200 mb-1.5;
+  }
+
+  /* Status badges */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5
+           text-xs font-semibold rounded-full
+           uppercase tracking-wider;
+  }
+
+  .badge-success {
+    @apply badge bg-risk-low/15 text-risk-low border border-risk-low/30;
+  }
+
+  .badge-warning {
+    @apply badge bg-risk-medium/15 text-risk-medium border border-risk-medium/30;
+  }
+
+  .badge-danger {
+    @apply badge bg-risk-high/15 text-risk-high border border-risk-high/30;
+  }
+
+  .badge-info {
+    @apply badge bg-lexnet-500/15 text-lexnet-300 border border-lexnet-500/30;
+  }
+
+  .badge-primary {
+    @apply badge bg-lexnet-600/20 text-lexnet-200 border border-lexnet-500/40;
+  }
+}
+
+@layer utilities {
+  /* Animated gradient text */
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-lexnet-400 via-accent-400 to-lexnet-400;
+    background-size: 200% auto;
+    animation: gradient-shift 3s ease-in-out infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+    100% { background-position: 0% center; }
+  }
+
+  /* Page section wrapper */
+  .page-section {
+    @apply animate-fade-in;
+  }
+
+  /* Skeleton loader shimmer */
+  .skeleton {
+    @apply bg-surface-700/30 rounded-lg animate-pulse;
+  }
+
+  .skeleton-text {
+    @apply skeleton h-4 rounded;
+  }
+
+  .skeleton-circle {
+    @apply skeleton rounded-full;
+  }
+
+  /* Shimmer overlay for loading cards */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(66, 99, 237, 0.04) 40%,
+      rgba(66, 99, 237, 0.08) 50%,
+      rgba(66, 99, 237, 0.04) 60%,
+      transparent 100%
+    );
+    animation: shimmer-sweep 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer-sweep {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Staggered animation delays for lists */
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+
+  /* Responsive overflow container */
+  .overflow-scroll-x {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Custom range slider styling */
+  input[type='range'] {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 9999px;
+    outline: none;
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4263ed;
+    cursor: pointer;
+    border: 2px solid #0f172a;
+    box-shadow: 0 0 8px rgba(66, 99, 237, 0.4);
+    transition: box-shadow 0.2s ease;
+  }
+
+  input[type='range']::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 16px rgba(66, 99, 237, 0.6);
+  }
+
+  input[type='range']::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #4263ed;
+    cursor: pointer;
+    border: 2px solid #0f172a;
+    box-shadow: 0 0 8px rgba(66, 99, 237, 0.4);
+  }
+
+  /* Select dropdown styling */
+  select.input-field {
+    @apply cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236686f4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 2.5rem;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select.input-field option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+}
+

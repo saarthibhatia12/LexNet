@@ -1,4 +1,23 @@
-﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="LexNet">
-  <rect width="64" height="64" rx="12" fill="#0f172a" />
-  <path d="M16 16h10v32H16zM30 16h10v32H30zM44 16h4v32h-4z" fill="#22d3ee"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e2670"/>
+      <stop offset="100%" stop-color="#4263ed"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="20" y1="16" x2="44" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Chain links / network nodes -->
+  <circle cx="20" cy="20" r="5" fill="url(#accent)" opacity="0.9"/>
+  <circle cx="44" cy="20" r="5" fill="url(#accent)" opacity="0.9"/>
+  <circle cx="32" cy="44" r="5" fill="url(#accent)" opacity="0.9"/>
+  <!-- Connecting lines -->
+  <line x1="24" y1="22" x2="40" y2="22" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="22" y1="24" x2="30" y2="40" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <line x1="42" y1="24" x2="34" y2="40" stroke="#6ee7b7" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <!-- L letter overlay -->
+  <text x="24" y="38" font-family="Inter, sans-serif" font-weight="800" font-size="22" fill="white" opacity="0.85">L</text>
 </svg>
