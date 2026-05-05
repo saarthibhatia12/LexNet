@@ -21,6 +21,7 @@ Usage:
 """
 
 import argparse
+from dataclasses import dataclass, field
 import logging
 import socket
 import sys
@@ -33,6 +34,7 @@ from .api_client import (
     APIAuthError,
     APIConnectionError,
     APIError,
+    APIRateLimitError,
     APIServerError,
     post_hardware_auth,
 )
@@ -53,6 +55,8 @@ logger = logging.getLogger(__name__)
 # ACK byte values sent back to firmware
 ACK_SUCCESS: int = 0x01
 ACK_FAILURE: int = 0xFF
+AUTH_SESSION_TTL_SEC_DEFAULT: int = 60
+RATE_LIMIT_BACKOFF_SEC_DEFAULT: int = 60
 
 
 class BridgeConfig:
@@ -64,13 +68,55 @@ class BridgeConfig:
         api_url: str,
         min_finger_score: int = 60,
         timestamp_tolerance_sec: int = 30,
+        auth_session_ttl_sec: int = AUTH_SESSION_TTL_SEC_DEFAULT,
+        rate_limit_backoff_sec: int = RATE_LIMIT_BACKOFF_SEC_DEFAULT,
         log_level: str = "INFO",
     ) -> None:
         self.jwt_secret = jwt_secret
         self.api_url = api_url
         self.min_finger_score = min_finger_score
         self.timestamp_tolerance_sec = timestamp_tolerance_sec
+        self.auth_session_ttl_sec = auth_session_ttl_sec
+        self.rate_limit_backoff_sec = rate_limit_backoff_sec
         self.log_level = log_level
+
+
+@dataclass
+class BridgeAuthState:
+    """Tracks short-lived backend auth state for repeated packets."""
+
+    authenticated_until_by_device: dict[str, float] = field(default_factory=dict)
+    backend_backoff_until: float = 0.0
+
+    def is_session_valid(self, device_id: str, now_monotonic: float) -> bool:
+        """Return True when the device has a still-valid cached auth session."""
+        return self.authenticated_until_by_device.get(device_id, 0.0) > now_monotonic
+
+    def cache_success(
+        self,
+        device_id: str,
+        now_monotonic: float,
+        ttl_seconds: int,
+    ) -> None:
+        """Remember a successful hardware auth for a short reuse window."""
+        self.authenticated_until_by_device[device_id] = now_monotonic + ttl_seconds
+        self.backend_backoff_until = 0.0
+
+    def clear_session(self, device_id: str) -> None:
+        """Drop any cached session for the device."""
+        self.authenticated_until_by_device.pop(device_id, None)
+
+    def record_rate_limit(
+        self,
+        now_monotonic: float,
+        retry_after_seconds: int,
+    ) -> None:
+        """Remember when the backend auth endpoint may be retried safely."""
+        self.backend_backoff_until = now_monotonic + retry_after_seconds
+
+    def is_in_backoff(self, now_monotonic: float) -> bool:
+        """Return True while the backend auth endpoint is cooling down."""
+        return self.backend_backoff_until > now_monotonic
 
 
 def _send_ack(
@@ -113,6 +159,7 @@ def _send_ack(
 def process_one_packet(
     port: "serial.Serial | TCPSerialAdapter",
     config: BridgeConfig,
+    auth_state: Optional[BridgeAuthState] = None,
     read_timeout: float = 2.0,
 ) -> Optional[bool]:
     """
@@ -129,6 +176,7 @@ def process_one_packet(
     Args:
         port: Open serial port or TCP adapter.
         config: Bridge runtime configuration.
+        auth_state: Short-lived backend auth cache and rate-limit state.
         read_timeout: Timeout for reading a packet.
 
     Returns:
@@ -179,10 +227,30 @@ def process_one_packet(
 
     logger.info("Packet validated — CRC OK, score OK, timestamp OK")
 
+    device_id = packet.device_id_hex
+    now_monotonic = time.monotonic()
+
+    if auth_state is not None and auth_state.is_session_valid(device_id, now_monotonic):
+        logger.info(
+            "Reusing cached auth session â€” device=%s score=%d",
+            device_id, packet.finger_score,
+        )
+        _send_ack(port, ACK_SUCCESS)
+        return True
+
+    if auth_state is not None and auth_state.is_in_backoff(now_monotonic):
+        remaining = max(0, int(auth_state.backend_backoff_until - now_monotonic))
+        logger.warning(
+            "Skipping backend auth during rate-limit cooldown â€” device=%s wait=%ds",
+            device_id, remaining,
+        )
+        _send_ack(port, ACK_FAILURE)
+        return False
+
     # --- Step 4: Generate JWT ---
     try:
         token = generate_hardware_jwt(
-            device_id=packet.device_id_hex,
+            device_id=device_id,
             finger_score=packet.finger_score,
             secret=config.jwt_secret,
         )
@@ -203,8 +271,17 @@ def process_one_packet(
         logger.error("Backend unreachable: %s", exc)
         _send_ack(port, ACK_FAILURE)
         return False
+    except APIRateLimitError as exc:
+        retry_after = exc.retry_after or config.rate_limit_backoff_sec
+        logger.warning("Backend rate limit hit: %s", exc)
+        if auth_state is not None:
+            auth_state.record_rate_limit(now_monotonic, retry_after)
+        _send_ack(port, ACK_FAILURE)
+        return False
     except APIAuthError as exc:
         logger.warning("Backend rejected auth: %s", exc)
+        if auth_state is not None:
+            auth_state.clear_session(device_id)
         _send_ack(port, ACK_FAILURE)
         return False
     except APIServerError as exc:
@@ -222,9 +299,12 @@ def process_one_packet(
         return False
 
     # --- Step 6: Send ACK success ---
+    if auth_state is not None:
+        auth_state.cache_success(device_id, now_monotonic, config.auth_session_ttl_sec)
+
     logger.info(
         "✓ Authentication SUCCESS — device=%s score=%d",
-        packet.device_id_hex, packet.finger_score,
+        device_id, packet.finger_score,
     )
     _send_ack(port, ACK_SUCCESS)
     return True
@@ -254,6 +334,7 @@ def run_bridge_loop(
     }
 
     iteration = 0
+    auth_state = BridgeAuthState()
     logger.info("=== Bridge loop started ===")
 
     try:
@@ -263,7 +344,7 @@ def run_bridge_loop(
                 break
 
             iteration += 1
-            result = process_one_packet(port, config)
+            result = process_one_packet(port, config, auth_state=auth_state)
 
             if result is None:
                 stats["timeouts"] += 1

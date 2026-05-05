@@ -43,6 +43,19 @@ class APIAuthError(APIError):
     pass
 
 
+class APIRateLimitError(APIError):
+    """Raised when the backend rejects auth due to rate limiting."""
+
+    def __init__(
+        self,
+        message: str,
+        status_code: Optional[int] = None,
+        retry_after: Optional[int] = None,
+    ) -> None:
+        super().__init__(message, status_code=status_code)
+        self.retry_after = retry_after
+
+
 class APIServerError(APIError):
     """Raised on 5xx server errors."""
     pass
@@ -70,6 +83,7 @@ def post_hardware_auth(
         APIConnectionError: If the backend is unreachable (connection refused,
                             DNS failure, timeout).
         APIAuthError: On 401 or 403 responses.
+        APIRateLimitError: On 429 responses.
         APIServerError: On 5xx responses.
     """
     url = f"{api_url.rstrip('/')}{AUTH_ENDPOINT}"
@@ -113,6 +127,19 @@ def post_hardware_auth(
             )
 
         # Server error — backend is broken
+        if status == 429:
+            body = _safe_response_body(response)
+            retry_after = _extract_retry_after_seconds(response)
+            logger.warning(
+                "Authentication rate-limited: %d â€” %s",
+                status, body,
+            )
+            raise APIRateLimitError(
+                f"Authentication rate limited: {status} â€” {body}",
+                status_code=status,
+                retry_after=retry_after,
+            )
+
         if status >= 500:
             body = _safe_response_body(response)
             logger.error(
@@ -166,3 +193,27 @@ def _safe_response_body(response: requests.Response, max_len: int = 200) -> str:
         return body
     except Exception:
         return "<unreadable>"
+
+
+def _extract_retry_after_seconds(response: requests.Response) -> Optional[int]:
+    """Extract a retry delay from standard rate-limit headers when present."""
+    retry_after = response.headers.get("Retry-After")
+    if retry_after is not None:
+        try:
+            value = int(retry_after.strip())
+            return value if value > 0 else None
+        except ValueError:
+            logger.debug("Ignoring non-integer Retry-After header: %r", retry_after)
+
+    rate_limit_reset = response.headers.get("RateLimit-Reset")
+    if rate_limit_reset is not None:
+        try:
+            value = int(rate_limit_reset.strip())
+            return value if value > 0 else None
+        except ValueError:
+            logger.debug(
+                "Ignoring non-integer RateLimit-Reset header: %r",
+                rate_limit_reset,
+            )
+
+    return None

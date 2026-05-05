@@ -29,6 +29,7 @@ from src.jwt_generator import (
 from src.api_client import (
     APIAuthError,
     APIConnectionError,
+    APIRateLimitError,
     APIServerError,
     post_hardware_auth,
 )
@@ -315,6 +316,21 @@ class TestPostHardwareAuth:
                 post_hardware_auth("http://localhost:4000", "token")
 
         assert exc_info.value.status_code == 503
+
+    def test_rate_limit_429(self) -> None:
+        """429 response should raise APIRateLimitError with retry_after."""
+        mock_response = MagicMock()
+        mock_response.status_code = 429
+        mock_response.reason = "Too Many Requests"
+        mock_response.text = "Rate limit exceeded"
+        mock_response.headers = {"Retry-After": "120"}
+
+        with patch("src.api_client.requests.post", return_value=mock_response):
+            with pytest.raises(APIRateLimitError) as exc_info:
+                post_hardware_auth("http://localhost:4000", "token")
+
+        assert exc_info.value.status_code == 429
+        assert exc_info.value.retry_after == 120
 
     def test_connection_refused(self) -> None:
         """Connection refused should raise APIConnectionError."""

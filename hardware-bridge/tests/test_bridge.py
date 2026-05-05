@@ -25,6 +25,7 @@ import pytest
 from src.bridge import (
     ACK_FAILURE,
     ACK_SUCCESS,
+    BridgeAuthState,
     BridgeConfig,
     _send_ack,
     process_one_packet,
@@ -34,6 +35,7 @@ from src.crc16 import compute_crc16
 from src.api_client import (
     APIAuthError,
     APIConnectionError,
+    APIRateLimitError,
     APIServerError,
 )
 
@@ -142,6 +144,8 @@ class TestBridgeConfig:
         )
         assert config.min_finger_score == 60
         assert config.timestamp_tolerance_sec == 30
+        assert config.auth_session_ttl_sec == 60
+        assert config.rate_limit_backoff_sec == 60
         assert config.log_level == "INFO"
 
     def test_custom_values(self) -> None:
@@ -155,6 +159,8 @@ class TestBridgeConfig:
         )
         assert config.min_finger_score == 70
         assert config.timestamp_tolerance_sec == 15
+        assert config.auth_session_ttl_sec == 60
+        assert config.rate_limit_backoff_sec == 60
         assert config.log_level == "DEBUG"
 
 
@@ -383,6 +389,81 @@ class TestProcessOnePacket:
         assert port.acks_sent == [ACK_FAILURE]
         mock_post.assert_not_called()
 
+    @patch("src.bridge.post_hardware_auth")
+    def test_cached_session_skips_repeated_backend_auth(
+        self, mock_post: MagicMock,
+    ) -> None:
+        """Repeated packets within the cache window should reuse auth state."""
+        mock_post.return_value = (True, 200)
+
+        packet = build_valid_packet(score=85)
+        port = MockPort(packets=[packet, packet])
+        auth_state = BridgeAuthState()
+
+        result_one = process_one_packet(port, DEFAULT_CONFIG, auth_state=auth_state)
+        result_two = process_one_packet(port, DEFAULT_CONFIG, auth_state=auth_state)
+
+        assert result_one is True
+        assert result_two is True
+        assert port.acks_sent == [ACK_SUCCESS, ACK_SUCCESS]
+        mock_post.assert_called_once()
+
+    @patch("src.bridge.post_hardware_auth")
+    def test_expired_cached_session_reauthenticates(
+        self, mock_post: MagicMock,
+    ) -> None:
+        """Once the cache expires, the bridge should call the backend again."""
+        mock_post.return_value = (True, 200)
+
+        short_cache_config = BridgeConfig(
+            jwt_secret=TEST_SECRET,
+            api_url="http://localhost:4000",
+            auth_session_ttl_sec=10,
+        )
+        packet = build_valid_packet(score=85)
+        port = MockPort(packets=[packet, packet])
+        auth_state = BridgeAuthState()
+
+        with patch("src.bridge.time.monotonic", side_effect=[100.0, 130.0]):
+            result_one = process_one_packet(
+                port, short_cache_config, auth_state=auth_state,
+            )
+            result_two = process_one_packet(
+                port, short_cache_config, auth_state=auth_state,
+            )
+
+        assert result_one is True
+        assert result_two is True
+        assert mock_post.call_count == 2
+
+    @patch("src.bridge.post_hardware_auth")
+    def test_rate_limit_backoff_prevents_request_storms(
+        self, mock_post: MagicMock,
+    ) -> None:
+        """A 429 should trigger backoff so the next packet avoids another POST."""
+        mock_post.side_effect = APIRateLimitError(
+            "Authentication rate limited",
+            status_code=429,
+            retry_after=30,
+        )
+
+        packet = build_valid_packet(score=85)
+        port = MockPort(packets=[packet, packet])
+        auth_state = BridgeAuthState()
+
+        with patch("src.bridge.time.monotonic", side_effect=[100.0, 105.0]):
+            result_one = process_one_packet(
+                port, DEFAULT_CONFIG, auth_state=auth_state,
+            )
+            result_two = process_one_packet(
+                port, DEFAULT_CONFIG, auth_state=auth_state,
+            )
+
+        assert result_one is False
+        assert result_two is False
+        assert port.acks_sent == [ACK_FAILURE, ACK_FAILURE]
+        assert mock_post.call_count == 1
+
 
 # ---------------------------------------------------------------------------
 # run_bridge_loop tests
@@ -443,11 +524,17 @@ class TestRunBridgeLoop:
         """Loop should stop after max_iterations."""
         mock_post.return_value = (True, 200)
 
+        no_cache_config = BridgeConfig(
+            jwt_secret=TEST_SECRET,
+            api_url="http://localhost:4000",
+            auth_session_ttl_sec=0,
+        )
+
         # Provide more packets than max_iterations
         packets = [build_valid_packet() for _ in range(10)]
         port = MockPort(packets=packets)
 
-        stats = run_bridge_loop(port, DEFAULT_CONFIG, max_iterations=3)
+        stats = run_bridge_loop(port, no_cache_config, max_iterations=3)
 
         assert stats["processed"] == 3
         assert mock_post.call_count == 3
@@ -461,13 +548,18 @@ class TestRunBridgeLoop:
             APIConnectionError("refused"),
         ]
 
+        no_cache_config = BridgeConfig(
+            jwt_secret=TEST_SECRET,
+            api_url="http://localhost:4000",
+            auth_session_ttl_sec=0,
+        )
         packets = [
             build_valid_packet(score=85),
             build_valid_packet(score=90),
         ]
         port = MockPort(packets=packets)
 
-        stats = run_bridge_loop(port, DEFAULT_CONFIG, max_iterations=2)
+        stats = run_bridge_loop(port, no_cache_config, max_iterations=2)
 
         assert stats["succeeded"] == 1
         assert stats["failed"] == 1
