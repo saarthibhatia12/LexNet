@@ -24,6 +24,7 @@ import { authRateLimiter } from '../middleware/rateLimiter.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { logger } from '../config/logger.js';
+import { env } from '../config/env.js';
 import type { Request, Response } from 'express';
 
 /**
@@ -60,6 +61,33 @@ export function createRestRouter(): Router {
     '/auth/login',
     authRateLimiter,
     asyncHandler(loginHandler)
+  );
+
+  // GET /api/auth/fingerprint/status — Fingerprint scan polling endpoint.
+  // When SKIP_HARDWARE_AUTH=true, immediately returns authenticated with a
+  // simulated device ID so the registration flow is not blocked.
+  router.get(
+    '/auth/fingerprint/status',
+    authMiddleware,
+    (_req: Request, res: Response) => {
+      if (env.SKIP_HARDWARE_AUTH) {
+        logger.info('Hardware auth bypassed — SKIP_HARDWARE_AUTH is enabled');
+        res.status(200).json({
+          status: 'authenticated',
+          deviceId: 'SIM_DEV_001',
+          fingerScore: 99,
+          simulated: true,
+        });
+        return;
+      }
+
+      // When real hardware is connected, this would check the bridge state.
+      // For now, return 'waiting' — the bridge will POST when a scan completes.
+      res.status(200).json({
+        status: 'waiting',
+        deviceId: null,
+      });
+    }
   );
 
   // -------------------------------------------------------------------------

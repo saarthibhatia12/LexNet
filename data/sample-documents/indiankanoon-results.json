@@ -1,0 +1,462 @@
+{
+  "fetchedAt": "2026-05-05T20:38:17.546573+00:00",
+  "query": "\"property dispute\" ANDD registration",
+  "page": 0,
+  "found": "1 - 10 of 2258",
+  "categories": [
+    [
+      "Filter by AI Tags",
+      [
+        {
+          "value": "indian-penal-code",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:indian-penal-code"
+        },
+        {
+          "value": "common-intention",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:common-intention"
+        },
+        {
+          "value": "murder",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:murder"
+        },
+        {
+          "value": "voluntarily-causing-hurt",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:voluntarily-causing-hurt"
+        },
+        {
+          "value": "criminal-procedure-code",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:criminal-procedure-code"
+        },
+        {
+          "value": "power-high-court-for-quashing",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:power-high-court-for-quashing"
+        },
+        {
+          "value": "criminal-intimidation",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:criminal-intimidation"
+        },
+        {
+          "value": "theft",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:theft"
+        },
+        {
+          "value": "rioting",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:rioting"
+        },
+        {
+          "value": "magistrate-empowered-under-section-190-to-order-investigation",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+tag:magistrate-empowered-under-section-190-to-order-investigation"
+        }
+      ]
+    ],
+    [
+      "Related Queries",
+      [
+        {
+          "value": "property dispute",
+          "formInput": "property%20dispute"
+        },
+        {
+          "value": "section 302 ipc",
+          "formInput": "section%20302%20ipc"
+        },
+        {
+          "value": "section 302 indian penal code",
+          "formInput": "section%20302%20indian%20penal%20code"
+        },
+        {
+          "value": "\"156(3)",
+          "formInput": "%22156%283%29"
+        },
+        {
+          "value": "section 156(3)",
+          "formInput": "section%20156%283%29"
+        },
+        {
+          "value": "sec.34 ipc",
+          "formInput": "sec.34%20ipc"
+        },
+        {
+          "value": "156 (3) of code of criminal procedure",
+          "formInput": "156%20%283%29%20of%20code%20of%20criminal%20procedure"
+        },
+        {
+          "value": "156(3) cr.p.c.",
+          "formInput": "156%283%29%20cr.p.c."
+        },
+        {
+          "value": "confession",
+          "formInput": "confession"
+        },
+        {
+          "value": "section 156(3) crpc",
+          "formInput": "section%20156%283%29%20crpc"
+        }
+      ]
+    ],
+    [
+      "Document Types",
+      [
+        {
+          "value": "All",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration",
+          "selected": true
+        },
+        {
+          "value": "Laws",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:laws"
+        },
+        {
+          "value": "Judgments",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:judgments"
+        },
+        {
+          "value": "Tribunals",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:tribunals"
+        },
+        {
+          "value": "Highcourts & Supremecourt",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:supremecourt,scorders,highcourts"
+        }
+      ]
+    ],
+    [
+      "Courts and Laws",
+      [
+        {
+          "value": "Delhi District Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:delhidc",
+          "selected": false
+        },
+        {
+          "value": "Madras High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:chennai",
+          "selected": false
+        },
+        {
+          "value": "Punjab-Haryana High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:punjab",
+          "selected": false
+        },
+        {
+          "value": "Karnataka High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:karnataka",
+          "selected": false
+        },
+        {
+          "value": "Bombay High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:bombay",
+          "selected": false
+        },
+        {
+          "value": "Delhi High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:delhi",
+          "selected": false
+        },
+        {
+          "value": "Madhya Pradesh High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:madhyapradesh",
+          "selected": false
+        },
+        {
+          "value": "Allahabad High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:allahabad",
+          "selected": false
+        },
+        {
+          "value": "Kerala High Court",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:kerala",
+          "selected": false
+        },
+        {
+          "value": "Delhi High Court - Orders",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+doctypes:delhiorders",
+          "selected": false
+        }
+      ]
+    ],
+    [
+      "Authors",
+      [
+        {
+          "value": "Maheshan Nagaprasanna",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+authorid:m-nagaprasanna"
+        },
+        {
+          "value": "M Dhandapani",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+authorid:m-dhandapani"
+        },
+        {
+          "value": "Bhushan Pradyumna Dharmadhikari",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+authorid:b-p-dharmadhikari"
+        },
+        {
+          "value": "Chakradhari Sharan Singh",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+authorid:c-s-singh"
+        },
+        {
+          "value": "Mohammad Nawaz",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+authorid:m-nawaz"
+        }
+      ]
+    ],
+    [
+      "Bench",
+      [
+        {
+          "value": "Maheshan Nagaprasanna",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:m-nagaprasanna"
+        },
+        {
+          "value": "M Dhandapani",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:m-dhandapani"
+        },
+        {
+          "value": "A B Chaudhari",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:a-b-chaudhari"
+        },
+        {
+          "value": "P N Deshmukh",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:p-n-deshmukh"
+        },
+        {
+          "value": "Bhushan Pradyumna Dharmadhikari",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:b-p-dharmadhikari"
+        },
+        {
+          "value": "Swapna Joshi",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:s-joshi"
+        },
+        {
+          "value": "Gurpal Singh Ahluwalia",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:g-s-ahluwalia"
+        },
+        {
+          "value": "Chakradhari Sharan Singh",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:c-s-singh"
+        },
+        {
+          "value": "Mohammad Nawaz",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:m-nawaz"
+        },
+        {
+          "value": "Krishnaiyer Ramakrishnan",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+benchid:k-ramakrishnan"
+        }
+      ]
+    ],
+    [
+      "Years",
+      [
+        {
+          "value": "2025",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2025"
+        },
+        {
+          "value": "2024",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2024"
+        },
+        {
+          "value": "2022",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2022"
+        },
+        {
+          "value": "2023",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2023"
+        },
+        {
+          "value": "2026",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2026"
+        },
+        {
+          "value": "2019",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2019"
+        },
+        {
+          "value": "2021",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2021"
+        },
+        {
+          "value": "2015",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2015"
+        },
+        {
+          "value": "2020",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2020"
+        },
+        {
+          "value": "2018",
+          "formInput": "%22property%20dispute%22%20ANDD%20registration+year:2018"
+        }
+      ]
+    ]
+  ],
+  "results": [
+    {
+      "searchResult": {
+        "tid": 191053202,
+        "catids": null,
+        "doctype": 1004,
+        "publishdate": "2025-02-13",
+        "authorid": 457,
+        "bench": [
+          457
+        ],
+        "title": "Imran Khan Rahim Khan vs The State Of Maharashtra Trhr. Home ... on 13 February, 2025",
+        "numcites": 13,
+        "numcitedby": 0,
+        "headline": "offence i.e. Crime\n\nNo.446/2023 relates to a <b>property</b> <b>dispute</b> and <b>registration</b> of this\n\ncrime is a counterblast and there was a counter",
+        "docsize": 17931,
+        "fragment": true,
+        "docsource": "Bombay High Court",
+        "author": "N W Sambre",
+        "authorEncoded": "n-w-sambre"
+      },
+      "docmeta": {
+        "tid": 191053202,
+        "publishdate": "2025-02-13",
+        "doctype": "Bombay High Court",
+        "relurl": "bombay/2025-02-13/WP-569-2024",
+        "caseno": "\n  \r\nWP/569/2024\n(11) 14/02/2025",
+        "numcites": 13,
+        "numcitedby": 0,
+        "title": "Imran Khan Rahim Khan vs The State Of Maharashtra Trhr. Home ... on 13 February, 2025"
+      },
+      "document": {
+        "tid": 191053202,
+        "publishdate": "2025-02-13",
+        "title": "Imran Khan Rahim Khan vs The State Of Maharashtra Trhr. Home ... on 13 February, 2025",
+        "doc": "<h2 class=\"doc_title\">Imran Khan Rahim Khan vs The State Of Maharashtra Trhr. Home ... on 13 February, 2025</h2>\n\n<h3 class=\"doc_author\">Author: <a href=\"/search/?formInput=authorid:n-w-sambre\">Nitin W. Sambre</a></h3>\n\n<h3 class=\"doc_bench\">Bench: <a href=\"/search/?formInput=benchid:n-w-sambre\">Nitin W. Sambre</a></h3>\n\n<pre id=\"pre_1\">2025:BHC-NAG:1489-DB\n\n\n\n\n                                                     1                  wp569.2024\n\n                   IN THE HIGH COURT OF JUDICATURE AT BOMBAY\n                             NAGPUR BENCH : NAGPUR\n\n                          CRIMINAL WRIT PETITION NO.569/2024\n\n              Imran Khan Rahim Khan\n              Aged about 29 years\n              Occupation Labourer\n              R/o Khidkipura Old City Akola,\n              District Akola.                                  ...    Petitioner\n                       - Versus -\n              1.   State of Maharashtra,\n                   Through Home Department\n                   (Special), 2nd Floor, Main\n                   Building, Mantralaya,\n                   Mumbai-32\n\n              2.   District Magistrate,\n                   District Akola.\n\n              3.   Superintendent of Police,\n                   Akola.\n\n              4.   Police Station Officer,\n                   Police Station, Old City Akola,\n                   District Akola                              ...   Respondents\n                             -----------------\n              Mr. Mir Nagman Ali, Advocate for the petitioner.\n              Mr. A.B. Badar, A.P.P. for respondent Nos.1 to 4.\n                         ----------------\n              CORAM: NITIN W. SAMBRE &amp; MRS.VRUSHALI V. JOSHI, JJ.\n              DATE OF RESERVING THE JUDGMENT: 6.2.2025.\n              DATE OF PRONOUNCING THE JUDGMENT: 13.2.2025.\n                                     2                    wp569.2024\n\nORAL JUDGMENT (Per Mrs. Vrushali V. Joshi, J.)</pre>\n<p data-structure=\"CDiscource\" id=\"p_1\">            Rule. Rule made returnable forthwith. Heard finally\nwith the consent of learned Advocates for the parties.\n\n</p><p data-structure=\"Issue\" id=\"p_2\">2.          This writ petition under <a href=\"/doc/1712542/\" id=\"a_1\">Article 226</a> of the\n\nConstitution of India challenges the correctness and validity of\n\nthe detention order dated 14.3.2024 passed by respondent\n\nNo.2/the District Collector, Akola detaining the petitioner in\n\nexercise of the powers conferred under <a href=\"/doc/44954902/\" id=\"a_2\">Section 3(1)</a> of the\n\nMaharashtra Prevention of Dangerous Activities of Slumlords,\n\nBootleggers, Drug-Offenders, Dangerous Persons, Video Pirates,\n\nSand Smugglers and Person Engaged in Black Marketing of\n\nEssential Commodities Act, 1981 (for short &quot;MPDA Act&quot;) and\n\nconfirmation order dated 08.5.2024 passed by respondent No.1.\n\nIn pursuance of the said order, the detenu was committed from\n\nCentral Jail, Akola to Central Jail, Nandurbar, Distt. Nandurbar\n\non the very same day.\n</p>\n<p data-structure=\"Issue\" id=\"p_3\">\n</p><p data-structure=\"Facts\" id=\"p_4\">3.          The alleged activities of the detenu are set out in the\n\ngrounds of detention order. Respondent No.3 submitted the\n                                      3                    wp569.2024\n\nproposal to the District Collector on 9.3.2024 in pursuance of the\n\ndetention of petitioner. Representation was filed by detenu before\n\nthe Advisory Board on 18.4.2024. Four criminal cases have been\n\nregistered against the petitioner out of which two offences are\n\nrelied upon for passing the detention order:-\n\n</p><blockquote id=\"blockquote_1\">(i)         Crime No.410/2023 registered on 7.11.2023 at Police\n\nStation Old City, Akola punishable under <a href=\"/doc/1540253/\" id=\"a_3\">Sections 326</a>, <a href=\"/doc/724142/\" id=\"a_4\">324</a>, <a href=\"/doc/222396/\" id=\"a_5\">427</a>,\n\n<a href=\"/doc/1096965/\" id=\"a_6\">143</a>, <a href=\"/doc/1258372/\" id=\"a_7\">147</a>, <a href=\"/doc/763672/\" id=\"a_8\">148</a>, <a href=\"/doc/999134/\" id=\"a_9\">149</a>, <a href=\"/doc/555306/\" id=\"a_10\">504</a> and <a href=\"/doc/180217/\" id=\"a_11\">506</a> of Indian Penal Code.\n\n\n</blockquote><blockquote id=\"blockquote_2\">(ii)        Crime No.446/2023 registered on 25.11.2023 at\n\nPolice Station Old City, Akola punishable under <a href=\"/doc/329571/\" id=\"a_12\">Sections 392</a> and\n\n<a href=\"/doc/222396/\" id=\"a_13\">427</a> of the Indian Penal Code.\n</blockquote>\n<blockquote id=\"blockquote_3\">\n</blockquote><p data-structure=\"Issue\" id=\"p_5\">4.          The grounds as raised in the petition by the petitioner\n\nare as under:-\n</p>\n<blockquote id=\"blockquote_4\">(a)         The proposal mainly refers to two cases in which the\n\npetitioner was falsely implicated. The second offence i.e. Crime\n\nNo.446/2023 relates to a property dispute and registration of this\n\ncrime is a counterblast and there was a counter F.I.R to this effect.\n\n</blockquote><p data-structure=\"Facts\" id=\"p_6\">The said crime is narrated in para 4.2 of the grounds of detention\n                                     4                    wp569.2024\n\nwhich states that the detenu punched the glass of an autorickshaw\n\nof the complainant and sustained no injuries, as can be seen in the\n\nblank column No.7 of arrest form of this crime.\n\n\n</p><p data-structure=\"Section\" id=\"p_7\">(b)         The last order of bail is dated 30.11.2024 and the\n\ndetention order is passed on 14.03.2024 and thereafter no crime\n\nis registered against the detenu, therefore, he has not flouted any\n\nbail orders. However, it is to be noted that from the perusal of the\n\ncrime chart it can be seen that the petitioner was externed from\n\nthe city limits of Akola for a period of six months on 08.12.2023\n\nunder <a href=\"/doc/291822/\" id=\"a_14\">Section 110</a> of the Code of Criminal Procedure, 1973.\n\n\n</p><p data-structure=\"CDiscource\" id=\"p_8\">5.          Mr. Ali. learned Advocate for the petitioner would\n\nsubmit that the in-camera statements of witnesses &quot;A&quot; and &quot;B&quot;\n\nwere recorded on 1st and 3rd of March, 2024 respectively and\n\nverified by the S.D.P.O Akola but if attachment to the proposal is\n\nseen there is only a reference of &quot;Index&quot;. It does not show that\n\nwhat were the contents of index and whether there are any sealed\n\nenvelopes of the witnesses of whom statements were recorded.\n\nFurther it is argued by learned Advocate for the petitioner that\n                                       5                     wp569.2024\n\nthe petitioner was out on bail in the above narrated offences of\n\nwhich reference was taken in the impugned order. It is further\n\nargued by learned Advocate for the petitioner that insofar as the\n\noffence i.e. Crime 446/2023 is concerned, the F.I.R was neither\n\nread nor the papers in pursuance to said crime were seen.\n\n\n</p><p data-structure=\"PetArg\" id=\"p_9\">6.          Mr. Badar, learned A.P.P, however, strenuously relied\n\non the affidavit-in-reply and submitted that after the detaining\n\nauthority being subjectively satisfied about the correctness,\n\ngenuineness and authenticity of the confidential statements, put\n\nthe endorsement as &quot;seen&quot; on the statements. He further\n\nsubmitted that the detaining authority has gone through the\n\nrecord and thereafter considered the recent crimes within six\n\nmonths and correctly observed that the crimes committed by the\n\npetitioner are sufficient to pass the detention order against the\n\npetitioner and rightly arrived at the subjective satisfaction.\n\n</p><p data-structure=\"RespArg\" id=\"p_10\">            Learned A.P.P. primarily relied on the fact that in the\n\nnarration of incident by the in-camera witnesses they have stated\n\nthat as the crowd gathered on the spot, petitioner flashed knife\n                                    6                 wp569.2024\n\ntowards them thereby threatening and creating terror in the\n\nminds of public. He further contended that the proposal of\n\ndetention of the petitioner had the mention of in-camera\n\nstatements also.\n</p>\n<p data-structure=\"Precedent\" id=\"p_11\">\n</p><p data-structure=\"CDiscource\" id=\"p_12\">7.           From the perusal of detention order passed by\n\nrespondent No.2 it appears that two offences are considered as\n\naforesaid.    It is not in dispute that in both the crimes the\n\npetitioner has been released on bail. When those crimes were\n\nconsidered while passing the detention order, the detaining\n\nauthority ought to have considered the facts of those cases. In\n\nCrime No.410/2023 offence punishable under <a href=\"/doc/1540253/\" id=\"a_15\">Sections 326</a>,\n\n<a href=\"/doc/724142/\" id=\"a_16\">324</a>, <a href=\"/doc/222396/\" id=\"a_17\">427</a>, <a href=\"/doc/1096965/\" id=\"a_18\">143</a>, <a href=\"/doc/1258372/\" id=\"a_19\">147</a>, <a href=\"/doc/763672/\" id=\"a_20\">148</a>, <a href=\"/doc/999134/\" id=\"a_21\">149</a>, <a href=\"/doc/555306/\" id=\"a_22\">504</a> and <a href=\"/doc/180217/\" id=\"a_23\">506</a> of Indian Penal Code\n\nwas registered.    The accused had committed this offence when\n\nthe complainant was parking his auto near his house.       The\n\naccused had abused him and the son of the petitioner came out\n\nand assaulted them with the iron pipe and also pelted stones.\n\nTherefore, the offence is registered. From the perusal of the\n\ncomplaint of the complainant it appears that the petitioner and\n                                     7                   wp569.2024\n\nthe complainant were staying adjacent and there was enmity\n\nbetween them. It is the offence against individual.\n\n\n</p><p data-structure=\"CDiscource\" id=\"p_13\">8.          Learned Advocate for the petitioner has stated that\n\nthere is counter F.I.R. which is not considered by the detaining\n\nauthority. Though the submission is made by the petitioner, the\n\npetitioner has also not filed on record the counter F.I.R. in this\n\nregard.\n</p>\n<p data-structure=\"Precedent\" id=\"p_14\">\n</p><p data-structure=\"Precedent\" id=\"p_15\">9.          Another offence is again about breaking the glass of\n\nthe auto of complainant and taking an amount of Rs.6,600/- from\n\nthe pocket of the complainant. In this offence also it appears that\n\nthe complainant was known to the petitioner. There is no injury\n\ncertificate regarding the petitioner though he has broken the glass\n\nof auto with his hand.    It is also against an individual and no\n\npublic order is affected. There is no apprehension of disturbance\n\nof public order. In-camera statements of witnesses &quot;A&quot; and &quot;B&quot;\n\nthough taken as it is, they would certainly show that people had\n\ngathered at the spot but the detention order cannot be based only\n\non the basis of statements of in-camera witnesses. We, therefore,\n                                     8                  wp569.2024\n\nagree with the submissions made on behalf of the petitioner based\n\non the judgment in case of Arjun S/o Ratan Gaikwad V/s. The\n\nState of Maharashtra and others in Criminal Appeal No.    /2024\n\narising out of SLP (Cri) No.12516/2024 wherein the distinction\n\nbetween disturbance of impugned order and public order is laid\n\ndown by relying upon the judgment in case of Ram Manohar\n\nLohia V/s. State of Bihar and another reported in (1996) 1 SCR\n\n709 and Ameena Begum V/s State of Telangana and others\n\nreported in (2023) 9 SCC 587. Those offences which are now\n\npending before the court would have at the most raised the law\n\nand order situation but not the public order.\n\n\n</p><p data-structure=\"Precedent\" id=\"p_16\">10.         We may rely further on the decision in the case of\n\nNenavath Bujji and others V/s. State of Telangana and others\n\nreported in 2024 SCC OnLine SC 367, particularly para 43,\n\nwhich reads as follows:-\n</p>\n<blockquote id=\"blockquote_5\">      &quot;43. We summarize our conclusions as under :-\n</blockquote><blockquote id=\"blockquote_6\">      (i) The Detaining Authority should take into\n      consideration only relevant and vital material to\n      arrive at the requisite subjective satisfaction,\n                                9                     wp569.2024\n\n</blockquote><blockquote id=\"blockquote_7\">(ii)    It is an unwritten law, constitutional and\nadministrative, that wherever a decision-making\nfunction is entrusted to the subjective satisfaction of\nthe statutory functionary, there is an implicit duty to\napply his mind to the pertinent and proximate\nmatters and eschew those which are irrelevant &amp;\nremote,\n</blockquote><blockquote id=\"blockquote_8\">(iii) There can be no dispute about the settled\nproposition that the detention order requires\nsubjective satisfaction of the detaining authority\nwhich, ordinarily, cannot be questioned by the court\nfor insufficiency of material. Nonetheless, if the\ndetaining authority does not consider relevant\ncircumstances or considers wholly unnecessary,\nimmaterial and irrelevant circumstances, then such\nsubjective satisfaction would be vitiated,\n</blockquote><blockquote id=\"blockquote_9\">(iv) In quashing the order of detention, the Court\ndoes not sit in judgment over the correctness of the\nsubjective satisfaction. The anxiety of the Court\nshould be to ascertain as to whether the decision-\n</blockquote><p data-structure=\"CDiscource\" id=\"p_17\">making process for reaching the subjective\nsatisfaction is based on objective facts or influenced\nby any caprice, malice or irrelevant considerations or\nnon-application of mind,\n</p><p data-structure=\"Conclusion\" id=\"p_18\">(v) While making a detention order, the authority\nshould arrive at a proper satisfaction which should be\nreflected clearly, and in categorical terms, in the order\nof detention,\n</p><p data-structure=\"Conclusion\" id=\"p_19\">(vi) The satisfaction cannot be inferred by mere\nstatement in the order that &quot;it was necessary to\nprevent the detenu from acting in a manner\nprejudicial to the maintenance of public order&quot;.\nRather the detaining authority will have to justify the\ndetention order from the material that existed before\nhim and the process of considering the said material\n                                     10                    wp569.2024\n\n      should be reflected in the order of detention while\n      expressing its satisfaction,\n</p><p data-structure=\"Conclusion\" id=\"p_20\">      (vii) Inability on the part of the state&#x27;s police\n      machinery to tackle the law and order situation\n      should not be an excuse to invoke the jurisdiction of\n      preventive detention,\n</p><p data-structure=\"Conclusion\" id=\"p_21\">      (viii) Justification for such an order should exist in\n      the ground(s) furnished to the detenu to reinforce the\n      order of detention. It cannot be explained by\n      reason(s)/grounds(s) not furnished to the detenu. The\n      decision of the authority must be the natural\n      culmination of the application of mind to the relevant\n      and material facts available on the record, and\n</p><p data-structure=\"Conclusion\" id=\"p_22\">      (ix) To arrive at a proper satisfaction warranting an\n      order of preventive detention, the detaining authority\n      must, first examine the material adduced against the\n      prospective detenu to satisfy itself whether his\n      conduct or antecedent(s) reflect that he has been\n      acting in a manner prejudicial to the maintenance of\n      public order and, second, if the aforesaid satisfaction\n      is arrived at, it must further consider whether it is\n      likely that the said person would act in a manner\n      prejudicial to the public order in near future unless he\n      is prevented from doing so by passing an order of\n      detention. For passing a detention order based on\n      subjective satisfaction, the answer of the aforesaid\n      aspects and points must be against the prospective\n      detenu. The absence of application of mind to the\n      pertinent and proximate material and vital matters\n      would show lack of statutory satisfaction on the part\n      of the detaining authority.&quot;\n</p>\n<p data-structure=\"CDiscource\" id=\"p_23\">11.         Another angle in the matter is that it is not in dispute\n\nthat the subjective satisfaction is one of the basic requirements for\n                                                                 11                   wp569.2024\n\n                            passing an order of detention. The subjective satisfaction can be\n\n                            arrived at on the basis of various facts involved in the matter.\n\n                            Each fact will have to be considered independently together with\n\n                            other evidence that has been brought on record. The other two\n\n                            criminal cases pending against the petitioner though can be taken\n\n                            as background or past conduct it would not per se establish the\n\n                            live link.\n</p>\n<p data-structure=\"Conclusion\" id=\"p_24\">\n</p><p data-structure=\"Conclusion\" id=\"p_25\">                            12.          Though the Advisory Board has approved the\n\n                            detention of the petitioner, yet for the aforesaid reasons, we do\n\n                            not find that there is any material before the detaining authority\n\n                            to detain the petitioner.     Therefore, the confirmation of the\n\n                            detention order by the State cannot be upheld. For the aforesaid\n\n                            reasons, petition deserves to be allowed and it is accordingly\n\n                            allowed. The impugned order is quashed and set aside. The\n\n                            petitioner be set at liberty forthwith, if not required in any other\n\n                            crime.\n</p>\n<p data-structure=\"Precedent\" id=\"p_26\">\n                            (MRS.VRUSHALI V. JOSHI, J.)                    (NITIN W. SAMBRE, J.)\n                            Tambaskar.\n</p>\n<p data-structure=\"Conclusion\" id=\"p_27\">Signed by: MR. N.V. TAMBASKAR\nDesignation: PA To Honourable Judge\nDate: 14/02/2025 11:05:38\n </p>",
+        "numcites": 13,
+        "numcitedby": 0,
+        "docsource": "Bombay High Court",
+        "citetid": 191053202,
+        "divtype": "judgments",
+        "courtcopy": true,
+        "query_alert": null
+      }
+    },
+    {
+      "searchResult": {
+        "tid": 126455978,
+        "catids": [
+          19,
+          192,
+          123,
+          400,
+          358
+        ],
+        "doctype": 1013,
+        "publishdate": "2014-04-18",
+        "authorid": 1140,
+        "bench": [
+          1140
+        ],
+        "title": "K.K. Abdurahiman vs State Of Kerala on 18 April, 2014",
+        "numcites": 12,
+        "numcitedby": 0,
+        "headline": "been restored as well. Further it is a\n\n<b>property</b> <b>dispute</b> which resulted in       <b>registration</b> of the crime\n\nand since the matter has been settled ... held that if it is a matter of <b>property</b> <b>dispute</b> which resulted\n\nin <b>registration</b> of crime and filing of final report",
+        "docsize": 11661,
+        "fragment": true,
+        "docsource": "Kerala High Court",
+        "author": "K Ramakrishnan",
+        "authorEncoded": "k-ramakrishnan"
+      },
+      "docmeta": {
+        "tid": 126455978,
+        "publishdate": "2014-04-18",
+        "doctype": "Kerala High Court",
+        "relurl": "kerala/357503",
+        "caseno": null,
+        "numcites": 12,
+        "numcitedby": 0,
+        "title": "K.K. Abdurahiman vs State Of Kerala on 18 April, 2014"
+      },
+      "document": {
+        "tid": 126455978,
+        "publishdate": "2014-04-18",
+        "title": "K.K. Abdurahiman vs State Of Kerala on 18 April, 2014",
+        "doc": "<h2 class=\"doc_title\">K.K. Abdurahiman vs State Of Kerala on 18 April, 2014</h2>\n\n<h3 class=\"doc_author\">Author: <a href=\"/search/?formInput=authorid:k-ramakrishnan\">K. Ramakrishnan</a></h3>\n\n<h3 class=\"doc_bench\">Bench: <a href=\"/search/?formInput=benchid:k-ramakrishnan\">K.Ramakrishnan</a></h3>\n\n<pre id=\"pre_1\">       \n\n  \n\n  \n\n \n \n                IN THE HIGH COURT OF KERALA AT ERNAKULAM\n\n                                PRESENT:\n\n               THE HONOURABLE MR. JUSTICE K.RAMAKRISHNAN\n\n        WEDNESDAY, THE 11TH DAY OF JUNE 2014/21ST JYAISHTA, 1936\n\n                      Crl.MC.No. 2940 of 2014 ()\n                      ---------------------------\n\n         CRIME NO. 273/2014 OF KASABA POLICE STATION, KOZHIKODE\n\nPETITIONERS:\n------------\n\n          1.  K.K. ABDURAHIMAN, AGED 51 YEARS,\n       S/O.MAMMU, &#x27;ASHERVAD&#x27;, JAFARKHAN COLONY ROAD,\n       KASABA AMSOM DESOM, KOZHIKODE DISTRICT.\n\n          2.  RAFEEK KOYATTY, AGED 52 YEARS,\n       S/O.KOYATTY, K.K.R.BUILDING, MAVOOR ROAD,\n       KASABA AMSOM DESOM , KOZHIKODE DISTRICT.\n\n       BY ADV. SRI.C.M.MOHAMMED IQUABAL\n\nRESPONDENTS:\n------------\n\n          1. STATE OF KERALA\n       REPRESENTED BY PUBLIC PROSECUTOR,\n       HIGH COURT OF KERALA, ERNAKULAM.\n\n          2. K. ARUMUKHAN @ MANI, AGED 40 YEARS,\n       S/O.KALIYAPPAN, HOUSE OF K.V.JANARDHANAN,\n       BAPPUTTY COMPOUND, BACK SIDE OF NATIONAL HOSPITAL,\n       MAVOOR ROAD, KASABA AMSOM DESOM, KOZHIKODE DISTRICT.\n\n       R2  BY ADV. SMT.T.J.SEEMA\n       R1 BY PUBLIC PROSECUTOR SMT. S. HYMA\n\n       THIS CRIMINAL MISC. CASE  HAVING COME UP FOR ADMISSION  ON\n11-06-2014, THE COURT ON THE SAME DAY PASSED THE FOLLOWING:\n\n/cl\n\f\n                      Crl.MC.No. 2940 of 2014 ()\n                      ---------------------------\n\n                                APPENDIX\n\nPETITIONERS&#x27; EXHIBITS:\n----------------------\n\nANNEXURE A1 - TRUE COPY OF THE FIR IN CRIME NO.273/2014 OF KOZHIKODE\nCUSBA POLICE STATION DATED 18-4-2014.\n\nANNEXURE A2 - TRUE COPY OF THE F.I.STATEMENT OF THE COMPLAINANT IN\nCRIME NO.273/2014 OF KOZHIKODE CUSBA POLICE STATION DATED 18-4-2014.\n\nANNEXURE A3 - TRUE COPY OF THE AGREEMENT BETWEEN THE 1ST PETITIONER AND\nTHE 2ND RESPONDENT DATED MAY, 2014.\n\nANNEXURE A4 - TRUE COPY OF THE AFFIDAVIT OF THE 2ND RESPONDENT DAED\n27-05-2014\n\nRESPONDENTS&#x27; EXHIBITS: NIL\n---------------------\n\n                             /TRUE COPY/\n                                         P.S TO JUDGE\n\n/cl\n\f\n\n\n                       K. RAMAKRISHNAN, J.\n                    .................................................\n                       Crl.M.C.No.2940 of 2014\n                    ..................................................\n              Dated this the 11th day of June, 2014.\n\n                                 O R D E R\n</pre>\n\n<p data-structure=\"Issue\" id=\"p_1\">      This Criminal Miscellaneous Case is filed by the accused\n\npersons in Crime No.273/2014 of Kozhikode Cusba police station\n\nto quash the proceedings on account of the settlement under\n\n<a href=\"/doc/1679850/\" id=\"a_1\">Section 482</a> of the Code of Criminal Procedure.\n\n</p><p data-structure=\"Facts\" id=\"p_2\">      2. It is alleged in the petition that the petitioners were\n\narrayed as accused 1 and 2 in Crime No.273/2014 of Kozhikode\n\nCusba police station which was registered on the basis of a\n\ncomplaint given by the second respondent against the present\n\npetitioners and 10 identifiable persons alleging offences under\n\n<a href=\"/doc/872363/\" id=\"a_2\">Sections 143</a>, <a href=\"/doc/1154131/\" id=\"a_3\">147</a>, <a href=\"/doc/791362/\" id=\"a_4\">148</a>, <a href=\"/doc/1289794/\" id=\"a_5\">452</a>, <a href=\"/doc/770961/\" id=\"a_6\">323</a>, <a href=\"/doc/1417508/\" id=\"a_7\">308</a>, <a href=\"/doc/1326470/\" id=\"a_8\">427</a> and 506(ii) read with\n\n<a href=\"/doc/999134/\" id=\"a_9\">Section 149</a> of the Indian Penal Code. While the investigation\n\nwas in progress, the matter has been settled between the\n\nparties. In fact it was relating to some property dispute which\n\nresulted in the incident and registration of the crime and the\n\nsame has been now settled between the parties as per Annexure\n\nA3 agreement and the de facto complaint has filed Annexure\n\nA4 affidavit also in support of the same.                          The civil dispute\n\f\n<span class=\"hidden_text\" id=\"span_1\">Crl.M.C.No.2940 of 2014                    2</span>\n\nbetween the parties were settled as a result of the settlement.\n\nSo the de facto complainant does not want to prosecute either\n\nthe petitioners or other persons mentioned in the First\n\nInformation Report. No purpose will be served by proceeding\n\nwith the case. Since it is in crime stage and some of the\n\noffences are non compoundable in nature, neither the police nor\n\nthe court will drop the proceedings at this stage.                         So the\n\npetitioners have no other remedy except to approach this Court\n\nseeking the following relief:\n</p>\n<blockquote id=\"blockquote_1\">                    For the  reasons stated above, it is      respectfully\n\n            prayed that this Hon&#x27;ble Court may be pleased to pass an\n\n            order quashing Annexure A1 FIR in Crime No.273/2014 of\n\n            Kozhikode Cusba police station and the proceedings in\n\n            pursuant to the same for the interest of justice.\n\n</blockquote><p data-structure=\"PetArg\" id=\"p_3\">        3. The second respondent appeared through counsel and\n\nsubmitted that the entire dispute between the parties has been\n\nsettled and he does not want to proceed with the investigation\n\nor prosecution which has been registered on the basis of his\n\ncomplaint against the petitioners and ten other identifiable\n\npersons involved in the case. He had filed Annexure-A4 affidavit\n\nstating these facts.\n</p>\n<p data-structure=\"PetArg\" id=\"p_4\">        4. The counsel for the petitioners submitted that in view\n\f\n<span class=\"hidden_text\" id=\"span_2\">Crl.M.C.No.2940 of 2014             3</span>\n\nof the settlement, no purpose will be served by proceeding with\n\nthe investigation as it will only amount to wastage of judicial\n\ntime and he prayed for allowing the application.\n\n</p><p data-structure=\"RespArg\" id=\"p_5\">        5. The learned Public Prosecutor, on instructions, as\n\ndirected by this Court, submitted that except this case, there\n\nis no other case, but opposed the application.\n\n</p><p data-structure=\"CDiscource\" id=\"p_6\">        6. It is an admitted fact that the petitioners and the second\n\nrespondent were having some property dispute and as result\n\nof the same their relationship strained and on the unfortunate\n\nday some incident happened and on the basis of the complaint\n\ngiven by the second respondent Annexure-A1 First Information\n\nReport       was registered as Crime No.273/2014 of Kozhikode\n\nCusba police station against the petitioners and ten identifiable\n\npersons alleging offences under <a href=\"/doc/872363/\" id=\"a_10\">Sections143</a>, <a href=\"/doc/1154131/\" id=\"a_11\">147</a>, <a href=\"/doc/791362/\" id=\"a_12\">148</a>, <a href=\"/doc/1289794/\" id=\"a_13\">452</a>,\n\n<a href=\"/doc/770961/\" id=\"a_14\">323</a>, <a href=\"/doc/1417508/\" id=\"a_15\">308</a>, <a href=\"/doc/1326470/\" id=\"a_16\">427</a> and 506(ii) read with <a href=\"/doc/999134/\" id=\"a_17\">Section 149</a> of the Indian\n\nPenal Code and investigation is in progress.            It is also an\n\nadmitted fact that there were civil disputes also between the\n\nparties in respect of the same. Now the mater has been settled\n\nbetween the parties due to intervention of well wishers of both\n\nthe parties and that resulted in execution of Annexure A3\n\nsettlement agreement. As per the agreement, both the parties\n\f\n<span class=\"hidden_text\" id=\"span_3\">Crl.M.C.No.2940 of 2014            4</span>\n\nagree to withdraw        all the cases between them. Accordingly\n\nthe second respondent has filed Annexure-A4 affidavit stating\n\nthese facts expressing his willingness to quash the entire\n\nproceedings in respect of Crime No.273/2014 of Kozhikdoe\n\nCusba police station. In view of the settlement, there is no\n\npossibility of conviction also. Further, on account of the\n\nsettlement, the relationship between the petitioners and the\n\nsecond respondent has been restored as well. Further it is a\n\nproperty dispute which resulted in       registration of the crime\n\nand since the matter has been settled, it cannot be said that it is\n\nhaving any public interest as well. It is true that offence like\n\n<a href=\"/doc/4266/\" id=\"a_18\">Section 308</a> of the Indian Penal Code was included. I am not at\n\nthis stage going to the the questions whether allegations are\n\nsufficient to attract the offence in view of the fact that the\n\nmatter has been settled        and no purpose    will be served by\n\nallowing the investigation or trial to continue and conviction in\n\nsuch case will be remote\n\n</p><p data-structure=\"Precedent\" id=\"p_7\">        <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"69949024\" id=\"span_4\">7. Further in the decision reported in <a href=\"/doc/69949024/\" id=\"a_19\">Gian Singh v. State\n\nof Punjab</a> (2012 (4) KLT 108 (SC), the Hon&#x27;ble Supreme Court\n\nhas held that if it is a matter of property dispute which resulted\n\nin registration of crime and filing of final report and if the\n\f\n<span class=\"hidden_text\" id=\"span_5\">Crl.M.C.No.2940 of 2014            5</span>\n\nparties have amicably settled the entire issue regarding property\n\ndispute and restored their relationship on account of the\n\nsettlement, this Court must always give effect to such settlement\n\nand quash the proceedings invoking the power under <a href=\"/doc/903398/\" id=\"a_20\">Section\n\n482</a> of the Code to give effect to the settlement and restoration\n\nof harmony between the neighbours.</span>\n</p>\n<p data-structure=\"Section\" id=\"p_8\">        8. <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"69949024\" id=\"span_6\">In view of the dictum <a href=\"/doc/69949024/\" id=\"a_21\">laid down in</a> <a href=\"/doc/69949024/\" id=\"a_22\">the above decision</a>\n\nand     also considering the    fact that it is a private property\n\ndispute that resulted in registration of the crime, which has\n\nbeen settled between the parties amicably due to intervention\n\nof mediators and no purpose will be served by allowing the\n\ninvestigation to continue or even ultimately if final report is filed,\n\nconviction in such cases will be remote, this Court feels that it is\n\na fit case where power under 482 of the Code has to be invoked\n\nto quash the proceedings to promote settlement and restoration\n\nof relationship between the parties which resulted on account\n\nof the settlement.</span>\n</p>\n<p data-structure=\"Conclusion\" id=\"p_9\">         So, the application is allowed and further proceedings in\n\nCrime No.273/2014 of Kozhikode Cusba police station as against\n\nthe petitioners and other ten identifiable persons mentioned\n\nis quashed.\n</p>\f\n<p data-structure=\"Conclusion\" id=\"p_10\"><span class=\"hidden_text\" id=\"span_7\">Crl.M.C.No.2940 of 2014               6</span>\n\n</p><p data-structure=\"Conclusion\" id=\"p_11\">        Office is directed to communicate this order to the Judicial\n\nFirst Class Magistrate Court-III, Kozhikode to inform the same\n\nto the concerned police station for necessary further action in\n\nthis regard.\n</p>\n<p data-structure=\"Conclusion\" id=\"p_12\">                                                   Sd/-\n</p>\n<p data-structure=\"Conclusion\" id=\"p_13\">                                      K. RAMAKRISHNAN, JUDGE.\n</p>\n<p data-structure=\"Conclusion\" id=\"p_14\">cl\n                              /true copy/\n                                           P.S to Judge\n\f\n<span class=\"hidden_text\" id=\"span_8\">Crl.M.C.No.2940 of 2014    7</span>\n\f\n\n\n</p>",
+        "numcites": 12,
+        "numcitedby": 0,
+        "docsource": "Kerala High Court",
+        "citetid": 126455978,
+        "divtype": "judgments",
+        "relatedqs": [
+          {
+            "value": "property dispute",
+            "formInput": "property%20dispute"
+          },
+          {
+            "value": "308",
+            "formInput": "308"
+          }
+        ],
+        "cats": [
+          {
+            "value": "unlawful-assembly",
+            "formInput": "tag:unlawful-assembly"
+          },
+          {
+            "value": "local-inquiry",
+            "formInput": "tag:local-inquiry"
+          },
+          {
+            "value": "magistrate-assigning-case-to-court-of-sessions",
+            "formInput": "tag:magistrate-assigning-case-to-court-of-sessions"
+          },
+          {
+            "value": "disposal-of-property-after-trial",
+            "formInput": "tag:disposal-of-property-after-trial"
+          },
+          {
+            "value": "sentence-on-offender-already-sentenced",
+            "formInput": "tag:sentence-on-offender-already-sentenced"
+          }
+        ],
+        "courtcopy": true,
+        "query_alert": null
+      }
+    },
+    {
+      "searchResult": {
+        "tid": 9335481,
+        "catids": null,
+        "doctype": 10000,
+        "publishdate": "2025-02-24",
+        "authorid": null,
+        "bench": null,
+        "title": "Ashok Kumar vs Pradeep Kumar on 24 February, 2025",
+        "numcites": 17,
+        "numcitedby": 0,
+        "headline": "examination, DW1 admitted that he settled the matter pertaining to\n<b>property</b> <b>dispute</b> after <b>registration</b> of FIR no. 889/2019 PS Bindapur.\nThe <b>property</b> was situated",
+        "docsize": 42612,
+        "fragment": true,
+        "docsource": "Delhi District Court"
+      },
+      "docmeta": {
+        "tid": 9335481,
+        "publishdate": "2025-02-24",
+        "doctype": "Delhi District Court",
+        "relurl": "delhidcecourt/2025-02-24/South-East/CT-CASES-8448-2018",
+        "caseno": "CT CASES/8448/2018",
+        "numcites": 17,
+        "numcitedby": 0,
+        "title": "Ashok Kumar vs Pradeep Kumar on 24 February, 2025"
+      },
+      "document": {
+        "tid": 9335481,
+        "publishdate": "2025-02-24",
+        "title": "Ashok Kumar vs Pradeep Kumar on 24 February, 2025",
+        "doc": "<h2 class=\"doc_title\">Ashok Kumar vs Pradeep Kumar on 24 February, 2025</h2>\n\n<pre id=\"pre_1\">          IN THE COURT OF JMFC (NI ACT)-01, SOUTH\n                EAST, SAKET COURTS, DELHI\n\n\n\n\nASHOK KUMAR\nS/o Late Sh. Lekh Raj\nR/o H. No. 28, A/L, Sheikh Sarai Phase-2\nNear Transport Authority\nNew Delhi                                ............ Complainant\n\n                               VERSUS\nPRADEEP KUMAR\nS/o Sh. Prem Nath\nR/o H. No A/140, Gali No 25\nBharat Vihar, Uttam Nagar\nNew Delhi-59                                        ............ Accused\n\n        Complainant Case no.                  8448/2018\n            CNR No.                     DLSE02-031098-2018\n               Title                   Ashok Kumar Vs. Pradeep\n                                               Kumar\n      Name of Complainant                   Ashok Kumar\n         Name of accused                   Pradeep Menon\n Date of registration of complaint           28.09.2018\n        Date of arguments                    18.11.2024\n     Date of pronouncement                   24.02.2025\n     Offence complained of             Under <a href=\"/doc/1823824/\" id=\"a_1\">Section 138</a> NI Act\n      Offence charged with             Under <a href=\"/doc/1823824/\" id=\"a_2\">Section 138</a> NI Act\n       Plea of the accused                Pleaded not guilty\n            Final order                       Convicted\n\n                                                                                      Digitally\n                                                                                      signed by\n                                                                                      ABHITESH\nCT No. 8448/2018         Ashok Kumar Vs. Pradeep Kumar      Page No 1/16   ABHITESH   KUMAR\n                                                                           KUMAR      Date:\n                                                                                      2025.02.24\n                                                                                      16:59:38\n                                                                                      +0530\n                               JUDGMENT\n</pre>\n<p data-structure=\"Issue\" id=\"p_1\">   1.      Brief facts of this case is as under:\n</p><blockquote id=\"blockquote_1\">              <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_1\">I.   That on 15.02.2015, complainant and accused both\n                   had purchased a property bearing no. 200, (New\n                   Plot No. C-1/14), Khasra No. 104/19/4, Rajapuri\n                   Colony, Palam New Delhi in equal partnership. In\n                   the month of January 2018, complainant got to\n                   know that accused is attempting to construct said\n                   property without his consent and knowledge.\n                   Thereafter, complainant had intimated police of PS\n                   Bindapur and police stopped the said construction.\n                   Accused several times attempted to do construction\n                   on the said property and accordingly complainant\n                   also lodged several complaints in this regard to the\n                   PS concerned vide DD No. 13-B dated 18.02.2018,\n                   complaint dated 13.03.2018 and 12.04.2018.\n             II.   That later complainant came to know that accused\n                   has already sold the entire property to Manoj\n                   Balhara, Sonu Balhara and Sanket Chaudhary S/o\n                   Mr. Ranpal Singh after making forged documents of\n                   the said plot on 22.07.2016. In this regard,\n                   Complainant also filed complaint in PS concerned,\n                   against the accused. Upon which accused contacted\n                   the complainant and apologized for his mistakes. He\n                   requested not to take any legal action against him\n                                                                                    Digitally\n                                                                                    signed by\n                                                                                    ABHITESH\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_3\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 2/16   ABHITESH KUMAR\n                                                                           KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_2\">                                                                                    2025.02.24\n                                                                                    16:59:46\n                                                                                    +0530\n                     and further stated that he is ready to purchase the\n                    share of the complainant.\n</blockquote><blockquote id=\"blockquote_3\">             III.   That considering past relations, complainant agreed\n                    for the same. The accused assured the complainant\n                    that he will pay a sum of Rs.75,00,000/- as\n                    consideration of sale amount of share of the\n                    complainant in the said plot. Thereafter, accused\n                    gave a sum of Rs.25,00,000/- to the complainant\n                    and for the balance amount of Rs.50,00,000/- he\n                    offered the title rights of 3 shops which are in the\n                    name of wife of the accused. Complainant agreed\n                    for the same.\n</blockquote><blockquote id=\"blockquote_4\">             IV.    That on 05.04.2018 when all the documents were\n                    executed in favour of the complainant, the accused\n                    refused to hand over the possession of the said\n                    shops and stated that he has arranged balance\n                    amount. Accused assured the complainant that he\n                    will pay sum of Rs. 25,00,000 in the month of\n                    August 2018 and remaining amount of Rs.\n                    25,00,000 in the month of December 2018. Accused\n                    issued two cheques bearing no. 333467 dated\n                    05.08.2018 amounting to Rs. 25,00,000 and 338050\n                    dated 05.12.2018 amounting to Rs. 25,00,000, both\n                    cheques are drawn on Syndicate Bank, Plot No.\n                    13B, Sector No. 23A, Dwarka Branch, New Delhi.\n</blockquote><p data-structure=\"Issue\" id=\"p_2\">                                                                                     <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_2\">Digitally\n                                                                                     signed by\n                                                                                     ABHITESH\nCT No. 8448/2018             <a href=\"/doc/42683426/\" id=\"a_4\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 3/16   ABHITESH KUMAR\n                                                                            KUMAR    Date:</span>\n</p><blockquote id=\"blockquote_5\">                                                                                     2025.02.24\n                                                                                     16:59:51\n                                                                                     +0530\n                    For cheque bearing no. 338050 another case CC No.\n                   663/2019 is also pending in this court.\n             V.    That instant case is pertaining to cheque bearing no.\n</blockquote><blockquote id=\"blockquote_6\">                   333467. On presentation, the aforesaid cheque\n                   returned unpaid with reason &quot;Funds Insufficient&quot;\n</blockquote><blockquote id=\"blockquote_7\">                   vide   return   memos       dated        07.08.2018    and\n                   14.08.2018. Complainant got issued a legal notice\n                   dated 05.09.2018. Notice was duly delivered to the\n                   accused but no payment was made by him and\n                   hence, the present complaint was filed under\n                   <a href=\"/doc/1823824/\" id=\"a_5\">Section 138</a> Negotiable Instruments Act, 1881\n                   (hereinafter &quot;<a href=\"/doc/1132672/\" id=\"a_6\">NI Act</a>&quot;).\n</blockquote><blockquote id=\"blockquote_8\">PROCEEDINGS BEFORE COURT:\n</blockquote><p data-structure=\"Facts\" id=\"p_3\"><span class=\"citetext\" data-sentiment=\"PARTY\" data-docid=\"42683426\" id=\"span_3\">2.     On the basis of pre-summoning evidence, accused was\nsummoned by the court for the offence under <a href=\"/doc/1823824/\" id=\"a_7\">Section 138</a> of the NI\nAct. The accused put in his own appearance and thereafter notice\nunder Section 251 The <a href=\"/doc/445276/\" id=\"a_8\">Code of Criminal Procedure</a>, 1973\n(hereinafter &quot;<a href=\"/doc/445276/\" id=\"a_9\">CrPC</a>&quot;) was framed upon the accused on 20.12.2021 to\nwhich accused pleaded not guilty and claimed trial. In his plea of\ndefence, the accused stated that &quot;I gave two cheques of\nRs.25,00,000/- each to the complainant. After that, the cheque in\nquestion (cheque no. 333467) got bounced. Thereafter, the\ncomplainant called me and told me that my cheque got bounced.\nAfter one week, I called the complainant at my house and I gave Rs.\n25,00,000/- in cash to the complainant. I asked him to return my\ncheque in question. The complainant told me that he will return me                        Digitally\n                                                                                          signed by\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_10\">Ashok Kumar Vs. Pradeep Kumar         Page No</a> 4/16            ABHITESH\n                                                                                 ABHITESH KUMAR\n                                                                                 KUMAR    Date:</span>\n</p><blockquote id=\"blockquote_9\">                                                                                          2025.02.24\n                                                                                          17:00:00\n                                                                                          +0530\n the cheque in question after the second cheque is cleared.\nThereafter, I told the complainant not to present the second cheque\nand I asked the complainant to take an amount of Rs. 25,00,000/- in\ncash from me towards the second cheque. Thereafter, when the\nsecond cheque got bounced, the complainant told me that my\nsecond cheque got bounced. Thereafter, I again called the\ncomplainant at my house and I gave Rs. 25,00,000/- in cash to the\ncomplainant towards the second cheque. Thereafter, I asked the\ncomplainant to return both the cheques. Thereafter, complainant\nsaid that both the cheques are at my house and I will give them to\nyou. Thereafter, I sent one person namely Sunil Chaddha alongwith\nthe complainant to take said cheques from the complainant.\nThereafter I got a call from the complainant and the complainant\ntold me that since he has some urgent work, he will return the\ncheques in 1-2 days. After 1-2 days, the complainant told me that I\nalso need interest on the said cheques and then only, I will return\nthe said cheques. Thereafter, the complainant filed the present\ncomplaint against me&quot;. Accused admitted his signature on cheque in\nquestion. In terms of <a href=\"/doc/1086076/\" id=\"a_11\">section 294</a> CrPC, accused has admitted the\ncheque in question Ex.CW1/D and return Memo Ex. CW1/E(Colly).\n</blockquote><p data-structure=\"Precedent\" id=\"p_4\">3.     Considering defence, accused was permitted to cross examine\nthe complainant on 20.12.2021.\n</p><p data-structure=\"CDiscource\" id=\"p_5\">4.     During the trial, complainant led evidences to prove his case.\nThe evidences are as under:\n</p><blockquote id=\"blockquote_10\">                        <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_4\">ORAL EVIDENCE\n                                                                                  Digitally\n                                                                                  signed by\nCT No. 8448/2018          <a href=\"/doc/42683426/\" id=\"a_12\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 5/16            ABHITESH\n                                                                         ABHITESH KUMAR\n                                                                         KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_11\">                                                                                  2025.02.24\n                                                                                  17:00:06\n                                                                                  +0530\n Sr. No.                           Name of witness\nCW-1                              Ashok Kumar/ complainant\n\n                   DOCUMENTARY EVIDENCE\nSr. No.                           Name of Documents\nMark A                            Copy of title document of\n                                  property bearing no. 200 (New\n                                  Plot No. C-1/14)\nMark B                            Copy of forged documents\nEx.CW1/A (Colly)                  Copy of police complaint lodged\n                                  by the complainant\nEx.CW1/B                          Copy of title documents of\n                                  transferring the share by the\n                                  complainant to the accused\nEx.CW1/C (Colly)                  Copy of title documents of three\n                                  shops in favour of complainant\nEx.CW1/D                          Cheque bearing no. 333467\nEx.CW1/E(Colly)                   Return Memo dated 07.08.2018\n                                  and 14.08.2018\nEx.CW1/F                          Copy of Legal Notice\nEx.CW1/G                          Speed post &amp; Courier receipts\nEx.CW1/H                          Returned envelope\nEx.CW1/I                          Delivery report of courier\nEx.CW1/1                          Evidence by way of affidavit.\nEx. DW1/C1                        Copy of order dated 31.01.2019\n                                  of Ld. ASJ (SFTC), South-West,\n                                  Dwarka\n\n</blockquote><p data-structure=\"CDiscource\" id=\"p_6\">5.     CW-1 was examined, cross examined and discharged.\nAccordingly, complainant evidence was closed on 31.08.2023.\nStatement of accused was recorded under <a href=\"/doc/767287/\" id=\"a_13\">Section 313</a> of CrPC read\nwith <a href=\"/doc/224316/\" id=\"a_14\">Section 281</a> of CrPC on 06.10.2023. <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_5\">Incriminating evidence\nCT No. 8448/2018        <a href=\"/doc/42683426/\" id=\"a_15\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 6/16            Digitally\n                                                                                signed by\n                                                                                ABHITESH\n                                                                       ABHITESH KUMAR\n                                                                       KUMAR    Date:</span>\n</p><blockquote id=\"blockquote_12\">                                                                                2025.02.24\n                                                                                17:00:22\n                                                                                +0530\n was put to him wherein he has stated that &quot;I gave this cheque as\nsecurity to the complainant and when it got dishonoured, the\ncomplainant came to my house and I gave him Rs.25,00,000/- in\ncash before my wife. Despite payment, this cheque was misussed\nby the complainant and this false case has been filed against me&quot;.\nThe accused opted to lead Defence Evidence (DE).\n</blockquote><p data-structure=\"Precedent\" id=\"p_7\">6.     In Defence Evidence, accused led evidence to prove his\ndefence. The evidences are as under:\n</p><blockquote id=\"blockquote_13\">                            ORAL EVIDENCE\nSr. No.                                Name of witness\nDW-1                                   Pradeep Kumar/ Accused\n\n</blockquote><p data-structure=\"CDiscource\" id=\"p_8\">7.     Final arguments were addressed by both the parties. This\ncourt has heard Ld. Counsels for both the parties and have perused\nthe entire record of the case files.\n</p><p data-structure=\"PetArg\" id=\"p_9\">8.     Ld. Counsel for the complainant reiterated the contents of the\ncomplaint and further contented that the accused failed to rebut the\npresumption under <a href=\"/doc/268919/\" id=\"a_16\">Section 139</a> r/w <a href=\"/doc/1177058/\" id=\"a_17\">Section 118 (a)</a> of the NI Act.\nAccordingly, learned Counsel prayed that accused be convicted for\nthe offence under <a href=\"/doc/1823824/\" id=\"a_18\">section 138</a> of the NI Act.\n</p><p data-structure=\"RespArg\" id=\"p_10\">9.     Per contra, learned counsel for the accused argued that the\naccused owes no legal liability. Accused already paid due amount to\nthe complainant in cash. Accordingly, Counsel for the accused has\nsubmitted that the complaint being a false one, the accused is\nentitled to be acquitted.\n</p><p data-structure=\"Precedent\" id=\"p_11\">INGREDIENTS OF OFFENCE AND DISCUSSION:\n</p><blockquote id=\"blockquote_14\">                                                                                    <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_6\">Digitally\n                                                                                    signed by\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_19\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 7/16            ABHITESH\n                                                                           ABHITESH KUMAR\n                                                                           KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_15\">                                                                                    2025.02.24\n                                                                                    17:00:37\n                                                                                    +0530\n</blockquote><p data-structure=\"Section\" id=\"p_12\"> 10.    Before dwelling into the facts of the present case, it would be\napposite to discuss the legal standards required to be met by both\nsides. In order to establish the offence under <a href=\"/doc/1823824/\" id=\"a_20\">Section 138</a> of NI Act,\nthe complainant must fulfill all the essential ingredients of the\noffence. Perusal of the bare provision reveals the following\nnecessary ingredients of the offence:\n</p><blockquote id=\"blockquote_16\">            First Ingredient: The cheque was drawn by a\n            person on an account maintained by him for\n            payment of money and the same is presented for\n            payment within a period of 3 months from the\n            date on which it is drawn or within the period of\n            its validity;\n</blockquote><blockquote id=\"blockquote_17\">            Second Ingredient: The cheque was drawn by\n            the drawer for discharge of any legally\n            enforceable debt or other liability;\n            Third Ingredient: The cheque was returned\n            unpaid by the bank due to either insufficiency\n            of funds in the account to honour the cheque or\n            that it exceeds the amount arranged to be paid\n            from that account on an agreement made with\n            that bank;\n</blockquote><blockquote id=\"blockquote_18\">            <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_7\">Fourth Ingredient: A demand of the said amount\n            has been made by the payee or holder in due\n            course of the cheque by a notice in writing\n            given to the drawer within thirty days of the\n                                                                                    Digitally\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_21\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 8/16            signed by\n                                                                                    ABHITESH\n                                                                           ABHITESH KUMAR\n                                                                           KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_19\">                                                                                    2025.02.24\n                                                                                    17:00:42\n                                                                                    +0530\n             receipt of information of the dishonour of\n            cheque from the bank;\n</blockquote><blockquote id=\"blockquote_20\">            Fifth Ingredient: The drawer fails to make\n            payment of the said amount of money within\n            fifteen days from the date of receipt of notice.\n</blockquote><p data-structure=\"Section\" id=\"p_13\">11.    It is only when all the aforementioned ingredients are\nsatisfied that the person who had drawn the cheque can be deemed\nto have committed an offence under <a href=\"/doc/1823824/\" id=\"a_22\">Section 138</a> of the NI Act. The\naccused can only be held guilty of the offence under <a href=\"/doc/1823824/\" id=\"a_23\">Section 138</a> NI\nAct if the above-mentioned ingredients are proved by the\ncomplainant co-extensively. Additionally, the conditions stipulated\nunder <a href=\"/doc/595945/\" id=\"a_24\">Section 142</a> of the NI Act have to be fulfilled.\nAPPRECIATION OF EVIDENCE:\n</p><p data-structure=\"Precedent\" id=\"p_14\"><span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_8\">12.    In present case, the issuance of cheque to the complainant,\nsignature on the cheque in question and service of statutory demand\nnotice is not disputed by the accused. In terms of <a href=\"/doc/1086076/\" id=\"a_25\">Section 294</a> CrPC,\ncheque is question and return memo admitted by the accused.\nPerusal of record reveals that statutory demand notice was sent to\nthe accused on his address situated at A-140, Bharat Vihar, Uttam\nNagar, New Delhi. The declaration (part of Ex. CW1/C), Mark &#x27;A&#x27;\nGPA etc. and other undisputed documents proved in this case, bears\nsame address of the accused, as written in statutory demand notice.\nTherefore, it is apparent that statutory demand notice was sent on\nthe correct address of the accused. At the time of framing of notice,\naccused admitted that the cheque in question was issued to the\ncomplainant and cheque in question bears his signature. Now, only                      Digitally\n                                                                                       signed by\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_26\">Ashok Kumar Vs. Pradeep Kumar      Page No</a> 9/16            ABHITESH\n                                                                              ABHITESH KUMAR\n                                                                              KUMAR    Date:</span>\n</p><blockquote id=\"blockquote_21\">                                                                                       2025.02.24\n                                                                                       17:00:47\n                                                                                       +0530\n dispute remains in this case is &quot;whether the cheque in question was\nissued by the accused to the complainant to discharge legally\nenforceable debt&quot;.\n</blockquote><p data-structure=\"Section\" id=\"p_15\">13.    As per the scheme of the <a href=\"/doc/1132672/\" id=\"a_27\">NI Act</a>, once the accused admits\nsignature on the cheque in question or it is proved that cheque in\nquestion is signed by the accused, certain presumptions are drawn,\nwhich result in shifting of onus. <a href=\"/doc/1177058/\" id=\"a_28\">Section 118(a)</a> of the NI Act lays\ndown the presumption that every negotiable instrument was made or\ndrawn for consideration. Another presumption is enumerated in\n<a href=\"/doc/268919/\" id=\"a_29\">Section 139</a> of NI Act. The provision lays down the presumption\nthat the holder of the cheque received it for the discharge, in whole\nor part, of any debt or other liability.\n</p><p data-structure=\"Precedent\" id=\"p_16\"><span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"441929\" id=\"span_9\">14.    The combined effect of these two provisions is a presumption\nthat the cheque was drawn for consideration and given by the\naccused for the discharge of debt or other liability. Both the sections\nuse the expression &quot;shall&quot;, which makes it imperative for the court\nto raise the presumptions, once the foundational facts required for\nthe same are proved. Reliance is placed upon the judgment of the\nHon&#x27;ble Supreme Court, <a href=\"/doc/441929/\" id=\"a_30\">Hiten P. Dalal vs. Bratindranath Banerjee</a>\nreported as (2001) 6 SCC 16.</span>\n</p><p data-structure=\"Precedent\" id=\"p_17\"><span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"363129\" id=\"span_10\">15.    The Hon&#x27;ble Supreme Court in <a href=\"/doc/363129/\" id=\"a_31\">Kumar Exports vs. Sharma\nCarpets</a> reported as (2009) 2 SCC 513, while discussing the\ncontours of <a href=\"/doc/1177058/\" id=\"a_32\">section 118(a)</a> r/w 139 of the <a href=\"/doc/1132672/\" id=\"a_33\">NI Act</a>, has held interalia\nthe following:</span>\n</p><blockquote id=\"blockquote_22\">            <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_11\">&quot;14. <a href=\"/doc/268919/\" id=\"a_34\">Section 139</a> of the Act provides that it shall\n            be presumed, unless the contrary is proved, that                         Digitally\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_35\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 10/16            signed by\n                                                                                     ABHITESH\n                                                                            ABHITESH KUMAR\n                                                                            KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_23\">                                                                                     2025.02.24\n                                                                                     17:00:53\n                                                                                     +0530\n             the holder of a cheque received the cheque of the\n            nature referred to in <a href=\"/doc/1823824/\" id=\"a_36\">section 138</a> for the discharge,\n            in whole or in part, of any debt or other liability.\n</blockquote><blockquote id=\"blockquote_24\">            15. Applying the definition of the word &quot;proved&quot;\n</blockquote><p data-structure=\"Section\" id=\"p_18\">            in <a href=\"/doc/1031309/\" id=\"a_37\">section 3</a> of the Evidence Act to the provisions\n            of <a href=\"/doc/517539/\" id=\"a_38\">sections 118</a> and <a href=\"/doc/268919/\" id=\"a_39\">139</a> of the Act, it becomes\n            evident that in a trial under <a href=\"/doc/1823824/\" id=\"a_40\">section 138</a> of the Act\n            a presumption will have to be made that every\n            negotiable instrument was made or drawn for\n            consideration and that it was executed for\n            discharge of debt or liability once the execution\n            of negotiable instrument is either proved or\n            admitted. As soon as the complainant discharges\n            the burden to prove that the instrument, say a\n            note, was executed by the accused, the rules of\n            presumptions under <a href=\"/doc/517539/\" id=\"a_41\">section 118</a> and <a href=\"/doc/268919/\" id=\"a_42\">139</a> of the\n            Act help him shift the burden on the accused. The\n            presumption will live, exist and survive and shall\n            end only when the contrary is proved by the\n            accused, that is, the cheque was not issued for\n            consideration and in discharge of any debt or\n            liability. A presumption is not in itself evidence,\n            but only makes a prima facie case for a party for\n            whose benefit it exists.&quot;\n</p><p data-structure=\"Issue\" id=\"p_19\"><span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_12\">16.    The presumptions raised under <a href=\"/doc/623665/\" id=\"a_43\">Section 118(b)</a> and <a href=\"/doc/268919/\" id=\"a_44\">Section\n139</a> NI Act are rebuttable presumptions. A reverse onus is cast on\n                                                                                          Digitally\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_45\">Ashok Kumar Vs. Pradeep Kumar      Page No</a> 11/16              signed by\n                                                                                          ABHITESH\n                                                                               ABHITESH   KUMAR\n                                                                               KUMAR      Date:</span>\n</p><blockquote id=\"blockquote_25\">                                                                                          2025.02.24\n                                                                                          17:00:58\n                                                                                          +0530\n the accused, who has to establish a probable defence on the standard\nof preponderance of probabilities to prove that either there was no\nlegally enforceable debt or other liability.\n</blockquote><blockquote id=\"blockquote_26\"><span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"150051\" id=\"span_13\">17.      Further, it has been held by a three-judge bench of the\nHon&#x27;ble Apex Court in the case of <a href=\"/doc/150051/\" id=\"a_46\">Rangappa vs. Sri Mohan</a>\nreported as (2010) 11 SCC 441 that the presumption contemplated\nunder <a href=\"/doc/268919/\" id=\"a_47\">Section 139</a> of NI Act includes the presumption of existence\nof a legally enforceable debt. Once the presumption is raised, it is\nfor the accused to rebut the same by establishing a probable\ndefence.</span> <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"87091644\" id=\"span_14\">The principles pertaining to the presumptions and the onus\nof proof were recently summarized by the Hon&#x27;ble Apex Court in\n<a href=\"/doc/87091644/\" id=\"a_48\">Basalingappa vs. Mudibasappa</a> reported as (2019) 5 SCC 418 as\nunder:</span>\n</blockquote><blockquote id=\"blockquote_27\">            <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"87091644\" id=\"span_15\">&quot;25. We having noticed the ratio <a href=\"/doc/87091644/\" id=\"a_49\">laid down by</a>\n            this Court in the above cases on <a href=\"/doc/1177058/\" id=\"a_50\">Section 118(a)</a>\n            and <a href=\"/doc/268919/\" id=\"a_51\">139</a>, we now summarize the principles\n            enumerated by this Court in the following\n            manner:</span>\n</blockquote><blockquote id=\"blockquote_28\">            25.1. Once the execution of cheque is admitted\n            <a href=\"/doc/268919/\" id=\"a_52\">Section 139</a> of the Act mandates a presumption\n            that the cheque was for the discharge of any debt\n            or other liability.\n</blockquote><blockquote id=\"blockquote_29\">            <span class=\"citetext\" data-sentiment=\"PARTY\" data-docid=\"42683426\" id=\"span_16\">25.2. The presumption under <a href=\"/doc/268919/\" id=\"a_53\">Section 139</a> is a\n            rebuttable presumption and the onus is on the\n            accused to raise probable defence. The standard\n\n                                                                                      Digitally\nCT No. 8448/2018             <a href=\"/doc/42683426/\" id=\"a_54\">Ashok Kumar Vs. Pradeep Kumar   Page No</a> 12/16            signed by\n                                                                                      ABHITESH\n                                                                             ABHITESH KUMAR\n                                                                             KUMAR    Date:</span>\n</blockquote><blockquote id=\"blockquote_30\">                                                                                      2025.02.24\n                                                                                      17:01:06\n                                                                                      +0530\n             of proof for rebutting the presumption is that of\n            preponderance of probabilities.\n            25.3. To rebut the presumption, it is open for the\n            accused to rely on evidence led by him or the\n            accused can also rely on the materials submitted\n            by the complainant in order to raise a probable\n            defence.     Inference     of    preponderance   of\n            probabilities can be drawn not only from the\n            materials brought on record by the parties but also\n            by reference to the circumstances upon which\n            they rely.\n</blockquote><blockquote id=\"blockquote_31\">            25.4. That it is not necessary for the accused to\n            come in the witness box in support of his defence.\n            <a href=\"/doc/268919/\" id=\"a_55\">Section 139</a> imposed an evidentiary burden and\n            not a persuasive burden.\n</blockquote><blockquote id=\"blockquote_32\">            25.5. It is not necessary for the accused to come\n            in the witness box to support his defence.&quot;\n</blockquote><p data-structure=\"CDiscource\" id=\"p_20\">18.    In present case, the accused took defence that he has already\npaid Rs. 50,00,000 to the complainant in the presence of Mr. Sunil\nChaddha and complainant has filed this false complaint by misusing\ncheque in question. In order to substantiate this defence, accused\ncross examined the complainant and produced himself as defence\nwitness. No discrepancy emerged from the evidence of the\ncomplainant. In defence evidence, DW1 stated that he has already\npaid Rs. 50,00,000 to the complainant. First installment of Rs.</p><pre id=\"pre_2\">\n<span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_17\">25,00,000 was given in the presence of Mr. Sunil Chaddha. After                         Digitally\n                                                                                        signed by\nCT No. 8448/2018            <a href=\"/doc/42683426/\" id=\"a_56\">Ashok Kumar Vs. Pradeep Kumar    Page No</a> 13/16              ABHITESH\n                                                                             ABHITESH   KUMAR\n                                                                             KUMAR      Date:\n                                                                                        2025.02.24\n                                                                                        17:01:11\n                                                                                        +0530</span>\n</pre><p data-structure=\"CDiscource\" id=\"p_21\"> making whole payment of Rs. 50,00,000, accused sent Mr. Sunil\nChaddha to take his security cheques back from the complainant but\ncomplainant did not return them on the pretext that cheques are not\ntraceable. After few days, accused also requested for his cheques.\nOn his request, complainant asked for interest on money.\n</p><p data-structure=\"CDiscource\" id=\"p_22\">19.    DW1 was cross examined by the complainant. In cross\nexamination, DW1 admitted that he settled the matter pertaining to\nproperty dispute after registration of FIR no. 889/2019 PS Bindapur.\nThe property was situated at Raja Puri, Uttam Nagar, New Delhi.\nHe admitted that he had purchased the share of the complainant in\nproperty bearing no. 200, New Number C-1/46, Khsra No.\n104/19/4, situated at Bharat Vihar Road, Raja Puri, Uttam Nagar,\nNew Delhi, in the sum of Rs. 75,00,000. He admitted that his wife\ntransferred 3 shops in the name of complainant in lieu of remaining\namount of Rs. 50,00,000 but possession of the same was never\nhanded over to the complainant. He admitted that he agreed to pay\nRs. 50,00,000 while seeking anticipatory bail in FIR No. 889/2019\n(Ex. DW1/C1).\n</p><p data-structure=\"CDiscource\" id=\"p_23\"><span class=\"citetext\" data-sentiment=\"Neg\" data-docid=\"42683426\" id=\"span_18\">20.    DW1 did not file receipt of payment given to the\ncomplainant. He stated that he arranged Rs. 50,00,000 by\nmortgaging gold jewelry of his wife and also by taking money from\nknown persons/friends. He stated that he mortgaged jewelry of his\nwife to Muthoot Finance Company. Mortgage documents are not\nfiled by the accused. DW1 did not disclose name of known persons\nand friend from whom he arranged money. DW1 did not any such\nperson to prove whether he actually arranged money and given to                     Digitally\nCT No. 8448/2018         <a href=\"/doc/42683426/\" id=\"a_57\">Ashok Kumar Vs. Pradeep Kumar     Page No</a> 14/16            signed by\n                                                                                    ABHITESH\n                                                                           ABHITESH KUMAR\n                                                                           KUMAR    Date:</span>\n</p><blockquote id=\"blockquote_33\">                                                                                    2025.02.24\n                                                                                    17:01:17\n                                                                                    +0530\n the complainant. DW1 did not disclose in his Income Tax Return\nthat he has returned Rs. 50,00,000 to the complainant. DW1 did not\nfile any complaint against the complainant for misusing his cheques.\nSunil Chaddha was also not called as defence witness in this case.\nDW1 admitted that he did not disclose the police investigating FIR\nNo. 889/2019 that Rs. 50,00,000 is paid to the complainant. No\ninstructions were given to the bank to stop the payment of cheque in\nquestion. Accused failed to prove that he had actually arranged Rs.\n50,00,000 and given to the complainant in cash. Therefore, the\ndefence of the accused that he has already given Rs. 50,00,000 to\nthe complainant has no legs to stand.\n</blockquote><p data-structure=\"Section\" id=\"p_24\">21.    In the light of discussions and the authorities cited in the\naforegoing para(s), it is apparent that the cheque in question was\nissued to the complainant by the accused for the purpose of\ndischarging his legally enforceable debt. It can be concluded that\nthe accused could not rebut the presumption raised under <a href=\"/doc/268919/\" id=\"a_58\">section\n139</a> of NI Act.\n</p><p data-structure=\"Conclusion\" id=\"p_25\">DECISION:\n</p><blockquote id=\"blockquote_34\">22.    To recapitulate the above discussion, no discrepancy emerged\nout of the cross examination of the complainant which may\ndemolish the version of the complainant even on the touchstone of\nbalance of probability. Accused has made general and vague\nstatement without any evidence. It is well settled that bare statement\nand story-telling would not help the accused to rebut the\npresumption raised under <a href=\"/doc/517539/\" id=\"a_59\">Section 118</a> and <a href=\"/doc/268919/\" id=\"a_60\">139</a> of the NI Act. Mere\ndenial is no denial in the eyes of law. <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_19\">In view of the above                          Digitally\nCT No. 8448/2018          <a href=\"/doc/42683426/\" id=\"a_61\">Ashok Kumar Vs. Pradeep Kumar    Page No</a> 15/16              signed by\n                                                                                      ABHITESH\n                                                                           ABHITESH   KUMAR\n                                                                           KUMAR      Date:</span>\n</blockquote><blockquote id=\"blockquote_35\">                                                                                      2025.02.24\n                                                                                      17:01:23\n                                                                                      +0530\n discussion, it comes before this court that the version of the accused\ncannot be accepted and he has failed to discharge his burden.\nPresumption is still intact with the complainant. Accordingly,\nAccused Pradeep Kumar S/o. Sh. Prem Nath held guilty and thereby\nconvicted for the offence punishable under <a href=\"/doc/1823824/\" id=\"a_62\">section 138</a> of the NI\nAct.\n</blockquote>\n<span class=\"hidden_text\" id=\"span_20\">                                                                  Digitally signed</span>\n<blockquote id=\"blockquote_36\">                                                     <span class=\"citetext\" data-sentiment=\"Pos\" data-docid=\"42683426\" id=\"span_21\">ABHITESH by ABHITESH\nPronounced in open court on 24.02.2025               KUMAR\n                                                              KUMAR\n                                                              Date: 2025.02.24\n                                                                  17:01:40 +0530\n\n                                             ABHITESH KUMAR\n                                      JMFC (NI ACT)-01, South East\n                                                 Saket/24.02.2025\n\nThis Judgment contains pages sixteen (16) and all pages bears my\ndigital signature.                                               Digitally signed\n                                                   ABHITESH by ABHITESH\n                                                            KUMAR\n                                                   KUMAR    Date: 2025.02.24\n                                                                 17:01:44 +0530\n\n                                             ABHITESH KUMAR\n                                      JMFC (NI ACT)-01, South East\n                                                 Saket/24.02.2025\n\n\n\n\nCT No. 8448/2018          <a href=\"/doc/42683426/\" id=\"a_63\">Ashok Kumar Vs. Pradeep Kumar          Page No</a> 16/16</span>\n </blockquote>",
+        "numcites": 17,
+        "numcitedby": 0,
+        "docsource": "Delhi District Court",
+        "citetid": 9335481,
+        "divtype": "judgments",
+        "courtcopy": true,
+        "query_alert": null
+      }
+    }
+  ]
+}

@@ -13,10 +13,10 @@ from flask import Flask, jsonify, request
 from pydantic import BaseModel, Field, ValidationError
 
 from src.config import Settings, get_settings
-from src.pipeline.conflict import compute_risk_score
+from src.pipeline.conflict import compute_risk_score, load_conflict_model
 from src.pipeline.graph_insert import insert_triples
 from src.pipeline.ner import extract_entities, is_transformer_pipeline_ready
-from src.pipeline.ocr import OCRError, extract_text_from_pdf
+from src.pipeline.ocr import EncryptedPayloadError, OCRError, decode_pdf_bytes_from_ipfs_payload, extract_text_from_pdf
 from src.pipeline.rel_extract import extract_relations
 from src.utils.text_clean import clean_text
 
@@ -42,7 +42,7 @@ class IPFSFetchError(RuntimeError):
     """Raised when a document cannot be fetched from local IPFS."""
 
 
-def fetch_ipfs_pdf_bytes(ipfs_api_url: str, ipfs_cid: str) -> bytes:
+def fetch_ipfs_pdf_bytes(ipfs_api_url: str, ipfs_cid: str, aes_key: str | None) -> bytes:
     base_url = ipfs_api_url.rstrip("/")
     try:
         response = requests.post(
@@ -56,7 +56,11 @@ def fetch_ipfs_pdf_bytes(ipfs_api_url: str, ipfs_cid: str) -> bytes:
 
     if not response.content:
         raise IPFSFetchError(f"IPFS CID {ipfs_cid} returned an empty document")
-    return response.content
+
+    try:
+        return decode_pdf_bytes_from_ipfs_payload(response.content, aes_key)
+    except EncryptedPayloadError as error:
+        raise IPFSFetchError(str(error)) from error
 
 
 def build_graph_features(metadata: dict[str, Any], entities_count: int, triples_inserted: int) -> dict[str, Any]:
@@ -102,14 +106,22 @@ def create_app(settings: Settings | None = None) -> Flask:
         tesseract_path = resolve_tesseract_command(resolved_settings.tesseract_cmd)
         legal_bert_path_exists = resolved_settings.ner_model_path.exists()
         legal_bert_runtime_ready = is_transformer_pipeline_ready()
-        conflict_model_ready = resolved_settings.conflict_model_path.exists()
+        conflict_model_path_exists = resolved_settings.conflict_model_path.exists()
+        conflict_model_loaded = load_conflict_model() is not None
+        aes_key_configured = bool(resolved_settings.aes_key)
         try:
             spacy.load(resolved_settings.spacy_model)
             spacy_ready = True
         except OSError:
             spacy_ready = False
 
-        runtime_ready = bool(tesseract_path) and legal_bert_runtime_ready and conflict_model_ready and spacy_ready
+        runtime_ready = (
+            bool(tesseract_path)
+            and legal_bert_runtime_ready
+            and conflict_model_loaded
+            and spacy_ready
+            and aes_key_configured
+        )
 
         payload = {
             "status": "ok" if runtime_ready else "degraded",
@@ -117,6 +129,7 @@ def create_app(settings: Settings | None = None) -> Flask:
             "checks": {
                 "neo4jUri": resolved_settings.neo4j_uri,
                 "ipfsApiUrl": resolved_settings.ipfs_api_url,
+                "aesKeyConfigured": aes_key_configured,
                 "spacyModel": resolved_settings.spacy_model,
                 "tesseract": {"configured": resolved_settings.tesseract_cmd, "resolved": tesseract_path},
                 "legalBertModelPath": {
@@ -126,7 +139,8 @@ def create_app(settings: Settings | None = None) -> Flask:
                 },
                 "conflictModelPath": {
                     "path": str(resolved_settings.conflict_model_path),
-                    "exists": conflict_model_ready,
+                    "exists": conflict_model_path_exists,
+                    "loaded": conflict_model_loaded,
                 },
                 "spacyLoad": {"model": resolved_settings.spacy_model, "loaded": spacy_ready},
             },
@@ -146,7 +160,11 @@ def create_app(settings: Settings | None = None) -> Flask:
 
         temp_pdf_path: Path | None = None
         try:
-            pdf_bytes = fetch_ipfs_pdf_bytes(resolved_settings.ipfs_api_url, payload.ipfs_cid)
+            pdf_bytes = fetch_ipfs_pdf_bytes(
+                resolved_settings.ipfs_api_url,
+                payload.ipfs_cid,
+                resolved_settings.aes_key,
+            )
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
                 temp_pdf.write(pdf_bytes)
                 temp_pdf_path = Path(temp_pdf.name)

@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     tesseract_cmd: str = Field(alias="TESSERACT_CMD", min_length=1)
     ipfs_api_url: str = Field(alias="IPFS_API_URL", min_length=1)
     conflict_model_path: Path = Field(alias="CONFLICT_MODEL_PATH")
+    aes_key: str | None = Field(default=None, alias="AES_KEY")
 
     @field_validator("ner_model_path", "conflict_model_path", mode="after")
     @classmethod
@@ -36,6 +37,19 @@ class Settings(BaseSettings):
     @classmethod
     def trim_tesseract_cmd(cls, value: str) -> str:
         return value.strip()
+
+    @field_validator("aes_key", mode="after")
+    @classmethod
+    def validate_aes_key(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        normalized = value.strip()
+        if len(normalized) != 64:
+            raise ValueError("AES_KEY must be exactly 64 hex characters (256-bit key).")
+        if any(character not in "0123456789abcdefABCDEF" for character in normalized):
+            raise ValueError("AES_KEY must contain only hexadecimal characters.")
+        return normalized
 
 
 @lru_cache(maxsize=1)

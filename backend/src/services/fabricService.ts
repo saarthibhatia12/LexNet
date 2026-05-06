@@ -12,7 +12,7 @@
 // ============================================================================
 
 import type { Contract } from 'fabric-network';
-import { getContract } from '../config/fabric.js';
+import { connectToFabric } from '../config/fabric.js';
 import { logger } from '../config/logger.js';
 import type { DocumentRecord, DocumentMetadata } from '../types/index.js';
 import { FabricError, DocumentNotFoundError, ValidationError } from '../types/index.js';
@@ -56,7 +56,7 @@ async function fabricCall<T>(
 ): Promise<T> {
   let contract: Contract;
   try {
-    contract = getContract();
+    contract = await connectToFabric();
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     throw new FabricError(`Cannot get Fabric contract for ${operation}: ${message}`);

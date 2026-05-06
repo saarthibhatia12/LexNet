@@ -8,10 +8,12 @@ COMPOSE_FILE="${NETWORK_DIR}/docker-compose-fabric.yaml"
 CHANNEL_NAME="${CHANNEL_NAME:-lexnet-channel}"
 CHAINCODE_NAME="${CHAINCODE_NAME:-lexnet-cc}"
 CHAINCODE_LABEL="${CHAINCODE_LABEL:-lexnet-cc_1.0}"
+CHAINCODE_VERSION="${CHAINCODE_VERSION:-1.0}"
+CHAINCODE_SEQUENCE="${CHAINCODE_SEQUENCE:-1}"
 CHAINCODE_LANG="${CHAINCODE_LANG:-golang}"
 CHAINCODE_SRC_PATH="${CHAINCODE_SRC_PATH:-/opt/gopath/src/chaincode/lexnet-cc}"
 CHAINCODE_PACKAGE="/etc/hyperledger/fabric/channel-artifacts/${CHAINCODE_NAME}.tar.gz"
-INSTALL_CHAINCODE="${INSTALL_CHAINCODE:-false}"
+INSTALL_CHAINCODE="${INSTALL_CHAINCODE:-true}"
 
 ORDERER_CA="/etc/hyperledger/fabric/crypto/ordererOrganizations/lexnet.local/orderers/orderer.lexnet.local/msp/tlscacerts/tlsca.lexnet.local-cert.pem"
 CHANNEL_TX="/etc/hyperledger/fabric/channel-artifacts/${CHANNEL_NAME}.tx"
@@ -85,6 +87,21 @@ run_verifier_peer() {
 			-e CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/users/Admin@verifierorg.lexnet.local/msp \
 			peer0.verifierorg.lexnet.local "$@"
 	fi
+}
+
+query_package_id() {
+	local output
+	output="$(run_govt_peer peer lifecycle chaincode queryinstalled)"
+	echo "${output}" | sed -n "s/^Package ID: \\([^,]*\\), Label: ${CHAINCODE_LABEL}$/\\1/p" | head -n 1
+}
+
+is_chaincode_committed() {
+	local output
+	if ! output="$(run_govt_peer peer lifecycle chaincode querycommitted --channelID "${CHANNEL_NAME}" --name "${CHAINCODE_NAME}" 2>/dev/null)"; then
+		return 1
+	fi
+
+	echo "${output}" | grep -q "Version: ${CHAINCODE_VERSION}, Sequence: ${CHAINCODE_SEQUENCE}"
 }
 
 require_tool docker
@@ -163,6 +180,70 @@ if [[ "${INSTALL_CHAINCODE}" == "true" ]]; then
 
 		log "Installed chaincodes on VerifierOrg peer"
 		run_verifier_peer peer lifecycle chaincode queryinstalled
+
+		PACKAGE_ID="$(query_package_id)"
+		if [[ -z "${PACKAGE_ID}" ]]; then
+			log "Unable to determine package ID for ${CHAINCODE_LABEL}"
+			exit 1
+		fi
+
+		log "Resolved package ID: ${PACKAGE_ID}"
+
+		if is_chaincode_committed; then
+			log "Chaincode ${CHAINCODE_NAME} is already committed on ${CHANNEL_NAME}"
+		else
+			log "Approving chaincode for GovtOrg"
+			run_govt_peer peer lifecycle chaincode approveformyorg \
+				-o orderer.lexnet.local:7050 \
+				--ordererTLSHostnameOverride orderer.lexnet.local \
+				--tls \
+				--cafile "${ORDERER_CA}" \
+				--channelID "${CHANNEL_NAME}" \
+				--name "${CHAINCODE_NAME}" \
+				--version "${CHAINCODE_VERSION}" \
+				--package-id "${PACKAGE_ID}" \
+				--sequence "${CHAINCODE_SEQUENCE}"
+
+			log "Approving chaincode for VerifierOrg"
+			run_verifier_peer peer lifecycle chaincode approveformyorg \
+				-o orderer.lexnet.local:7050 \
+				--ordererTLSHostnameOverride orderer.lexnet.local \
+				--tls \
+				--cafile "${ORDERER_CA}" \
+				--channelID "${CHANNEL_NAME}" \
+				--name "${CHAINCODE_NAME}" \
+				--version "${CHAINCODE_VERSION}" \
+				--package-id "${PACKAGE_ID}" \
+				--sequence "${CHAINCODE_SEQUENCE}"
+
+			log "Checking commit readiness"
+			run_govt_peer peer lifecycle chaincode checkcommitreadiness \
+				--channelID "${CHANNEL_NAME}" \
+				--name "${CHAINCODE_NAME}" \
+				--version "${CHAINCODE_VERSION}" \
+				--sequence "${CHAINCODE_SEQUENCE}" \
+				--output json
+
+			log "Committing chaincode definition"
+			run_govt_peer peer lifecycle chaincode commit \
+				-o orderer.lexnet.local:7050 \
+				--ordererTLSHostnameOverride orderer.lexnet.local \
+				--channelID "${CHANNEL_NAME}" \
+				--name "${CHAINCODE_NAME}" \
+				--version "${CHAINCODE_VERSION}" \
+				--sequence "${CHAINCODE_SEQUENCE}" \
+				--tls \
+				--cafile "${ORDERER_CA}" \
+				--peerAddresses peer0.govtorg.lexnet.local:7051 \
+				--tlsRootCertFiles /etc/hyperledger/fabric/crypto/peerOrganizations/govtorg.lexnet.local/peers/peer0.govtorg.lexnet.local/tls/ca.crt \
+				--peerAddresses peer0.verifierorg.lexnet.local:9051 \
+				--tlsRootCertFiles /etc/hyperledger/fabric/crypto/peerOrganizations/verifierorg.lexnet.local/peers/peer0.verifierorg.lexnet.local/tls/ca.crt
+
+			log "Committed chaincode definition"
+			run_govt_peer peer lifecycle chaincode querycommitted \
+				--channelID "${CHANNEL_NAME}" \
+				--name "${CHAINCODE_NAME}"
+		fi
 	else
 		log "Chaincode source not found at ../chaincode/lexnet-cc; cannot run lifecycle package/install."
 		exit 1
@@ -172,4 +253,3 @@ else
 fi
 
 log "Network setup complete"
-

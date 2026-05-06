@@ -96,6 +96,12 @@ const envSchema = z.object({
     .default('50')
     .transform(Number)
     .pipe(z.number().int().min(1).max(500)),
+
+  // Hardware bypass (development — no STM32 connected)
+  SKIP_HARDWARE_AUTH: z
+    .string()
+    .default('false')
+    .transform((val) => val === 'true' || val === '1'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

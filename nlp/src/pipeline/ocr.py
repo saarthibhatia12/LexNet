@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import base64
+import json
 import shutil
+from binascii import Error as BinasciiError
 from io import BytesIO
 from pathlib import Path
 
 import pytesseract
+from cryptography.exceptions import InvalidTag
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from PIL import Image, ImageOps
 from pypdf import PdfReader
-from pypdf.errors import FileNotDecryptedError
+from pypdf.errors import FileNotDecryptedError, PdfReadError, PdfStreamError
 
 from src.config import get_settings
 
@@ -32,6 +37,10 @@ class TesseractNotFoundError(OCRError):
 
 class OCRImageExtractionError(OCRError):
     """Raised when OCR fallback cannot obtain renderable images from the PDF."""
+
+
+class EncryptedPayloadError(RuntimeError):
+    """Raised when an encrypted IPFS payload cannot be decoded or decrypted."""
 
 
 def normalize_text(text: str) -> str:
@@ -94,9 +103,65 @@ def perform_ocr(images: list[Image.Image]) -> str:
     return normalize_text("\n".join(ocr_chunks))
 
 
+def decode_pdf_bytes_from_ipfs_payload(payload_bytes: bytes, aes_key_hex: str | None) -> bytes:
+    if not payload_bytes:
+        raise EncryptedPayloadError("IPFS payload is empty.")
+
+    if payload_bytes.startswith(b"%PDF-"):
+        return payload_bytes
+
+    try:
+        payload_text = payload_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return payload_bytes
+
+    try:
+        payload = json.loads(payload_text)
+    except json.JSONDecodeError:
+        return payload_bytes
+
+    if not isinstance(payload, dict):
+        raise EncryptedPayloadError("IPFS payload JSON must be an object.")
+
+    required_fields = ("ciphertext", "iv", "authTag")
+    if not all(field in payload for field in required_fields):
+        message = payload.get("Message") or payload.get("message")
+        if isinstance(message, str) and message.strip():
+            raise EncryptedPayloadError(f"IPFS API returned JSON instead of a PDF: {message.strip()}")
+        raise EncryptedPayloadError("IPFS payload JSON is not a valid encrypted document envelope.")
+
+    if not aes_key_hex:
+        raise EncryptedPayloadError("AES_KEY is required to decrypt IPFS document payloads.")
+
+    try:
+        ciphertext = base64.b64decode(str(payload["ciphertext"]), validate=True)
+        iv = base64.b64decode(str(payload["iv"]), validate=True)
+        auth_tag = base64.b64decode(str(payload["authTag"]), validate=True)
+    except (BinasciiError, ValueError, TypeError) as error:
+        raise EncryptedPayloadError("Encrypted IPFS payload contains invalid base64 fields.") from error
+
+    if len(iv) != 12:
+        raise EncryptedPayloadError(f"Encrypted IPFS payload IV must be 12 bytes, got {len(iv)}.")
+    if len(auth_tag) != 16:
+        raise EncryptedPayloadError(f"Encrypted IPFS payload authTag must be 16 bytes, got {len(auth_tag)}.")
+
+    try:
+        plaintext = AESGCM(bytes.fromhex(aes_key_hex)).decrypt(iv, ciphertext + auth_tag, None)
+    except (InvalidTag, ValueError) as error:
+        raise EncryptedPayloadError("Could not decrypt IPFS document payload with configured AES_KEY.") from error
+
+    if not plaintext.startswith(b"%PDF-"):
+        raise EncryptedPayloadError("Decrypted IPFS payload is not a PDF document.")
+
+    return plaintext
+
+
 def extract_text_from_pdf(pdf_path: str) -> str:
     pdf_file = Path(pdf_path)
-    reader = PdfReader(str(pdf_file))
+    try:
+        reader = PdfReader(str(pdf_file))
+    except (PdfReadError, PdfStreamError) as error:
+        raise OCRError(f"Invalid or unreadable PDF file: {pdf_file}") from error
 
     if reader.is_encrypted:
         raise EncryptedPDFError(f"Encrypted PDF files are not supported: {pdf_file}")
@@ -126,4 +191,3 @@ def extract_text_from_pdf(pdf_path: str) -> str:
         return combined_text
 
     raise OCRImageExtractionError(f"OCR could not extract text from PDF: {pdf_file}")
-

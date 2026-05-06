@@ -1,6 +1,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from src.models.risk import RiskResult
 from src.pipeline import conflict
 from src.pipeline.conflict import compute_risk_score, extract_features
@@ -80,3 +82,34 @@ def test_empty_doc_hash_is_rejected() -> None:
         assert "doc_hash" in str(error)
     else:
         raise AssertionError("compute_risk_score should reject an empty doc_hash.")
+
+
+def test_model_score_falls_back_when_predict_proba_returns_nan(monkeypatch: object) -> None:
+    class FakeModel:
+        def predict_proba(self, vector: list[list[float]]) -> list[list[float]]:
+            assert len(vector[0]) == len(conflict.FEATURE_COLUMNS)
+            return [[0.0, float("nan")]]
+
+    conflict.load_conflict_model.cache_clear()
+    monkeypatch.setattr(conflict, "load_conflict_model", lambda: FakeModel())
+
+    result = compute_risk_score("doc-nan", {}, {})
+
+    assert result.score == conflict.DEFAULT_LOW_RISK_SCORE
+
+
+def test_load_conflict_model_returns_none_when_pickle_dependencies_are_missing(
+    monkeypatch: object,
+    tmp_path: Path,
+) -> None:
+    model_path = tmp_path / "conflict_model.pkl"
+    model_path.write_bytes(b"placeholder")
+
+    class FakeSettings:
+        conflict_model_path = model_path
+
+    conflict.load_conflict_model.cache_clear()
+    monkeypatch.setattr(conflict, "get_settings", lambda: FakeSettings())
+    monkeypatch.setattr(conflict.pickle, "load", lambda _file: (_ for _ in ()).throw(ModuleNotFoundError("xgboost")))
+
+    assert conflict.load_conflict_model() is None

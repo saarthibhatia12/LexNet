@@ -113,6 +113,7 @@ export default function RegisterPage() {
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [result, setResult] = useState<RegisterResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [hasRegistrationAttempted, setHasRegistrationAttempted] = useState(false);
 
   const pollRef = useRef<number | null>(null);
 
@@ -128,6 +129,13 @@ export default function RegisterPage() {
         clearInterval(pollRef.current);
       }
     };
+  }, []);
+
+  const stopFingerprintPolling = useCallback(() => {
+    if (pollRef.current !== null) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
   }, []);
 
   // ---- File selection → base64 ----
@@ -153,8 +161,11 @@ export default function RegisterPage() {
 
   // ---- Fingerprint authentication ----
   const startFingerprintAuth = useCallback(() => {
+    stopFingerprintPolling();
     setFingerprintState('waiting');
+    setDeviceId(null);
     setError(null);
+    setHasRegistrationAttempted(false);
 
     let attempts = 0;
     const maxAttempts = 30; // 60 seconds max
@@ -173,16 +184,14 @@ export default function RegisterPage() {
           const data = await response.json();
 
           if (data.status === 'authenticated' && data.deviceId) {
-            clearInterval(pollRef.current!);
-            pollRef.current = null;
+            stopFingerprintPolling();
             setDeviceId(data.deviceId);
             setFingerprintState('success');
             return;
           }
 
           if (data.status === 'failed') {
-            clearInterval(pollRef.current!);
-            pollRef.current = null;
+            stopFingerprintPolling();
             setFingerprintState('failed');
             return;
           }
@@ -192,19 +201,21 @@ export default function RegisterPage() {
       }
 
       if (attempts >= maxAttempts) {
-        clearInterval(pollRef.current!);
-        pollRef.current = null;
+        stopFingerprintPolling();
         // Auto-succeed with simulated device for development
         setDeviceId('SIM_DEV_001');
         setFingerprintState('success');
       }
     }, FINGERPRINT_POLL_INTERVAL_MS);
-  }, []);
+  }, [stopFingerprintPolling]);
 
   const retryFingerprint = useCallback(() => {
+    stopFingerprintPolling();
     setFingerprintState('idle');
     setDeviceId(null);
-  }, []);
+    setError(null);
+    setHasRegistrationAttempted(false);
+  }, [stopFingerprintPolling]);
 
   // ---- Submit registration ----
   const handleRegister = useCallback(async () => {
@@ -213,10 +224,15 @@ export default function RegisterPage() {
       return;
     }
 
+    if (registering) {
+      return;
+    }
+
     setError(null);
+    setHasRegistrationAttempted(true);
 
     try {
-      const { data } = await registerDocument({
+      const { data, errors } = await registerDocument({
         variables: {
           input: {
             fileBase64,
@@ -233,21 +249,52 @@ export default function RegisterPage() {
         },
       });
 
+      if (errors && errors.length > 0) {
+        throw new Error(errors.map((graphqlError) => graphqlError.message).join('; '));
+      }
+
       if (data?.registerDocument) {
         setResult(data.registerDocument);
+        return;
       }
+
+      throw new Error('Document registration did not return a result.');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Registration failed';
       setError(message);
     }
-  }, [fileBase64, docType, ownerId, deviceId, propertyId, buyer, seller, propertyValue, registerDocument]);
+  }, [
+    fileBase64,
+    docType,
+    ownerId,
+    deviceId,
+    propertyId,
+    buyer,
+    seller,
+    propertyValue,
+    registerDocument,
+    registering,
+  ]);
 
   // ---- Auto-submit after successful fingerprint ----
   useEffect(() => {
-    if (fingerprintState === 'success' && deviceId && !result && !registering) {
-      handleRegister();
+    if (
+      fingerprintState === 'success' &&
+      deviceId &&
+      !result &&
+      !registering &&
+      !hasRegistrationAttempted
+    ) {
+      void handleRegister();
     }
-  }, [fingerprintState, deviceId, result, registering, handleRegister]);
+  }, [
+    fingerprintState,
+    deviceId,
+    result,
+    registering,
+    hasRegistrationAttempted,
+    handleRegister,
+  ]);
 
   // ---- Step validation ----
   const canProceedStep1 = file !== null && fileBase64 !== null;
@@ -584,9 +631,11 @@ export default function RegisterPage() {
             <button
               type="button"
               onClick={() => {
+                stopFingerprintPolling();
                 setStep(2);
                 setFingerprintState('idle');
                 setDeviceId(null);
+                setHasRegistrationAttempted(false);
               }}
               disabled={registering}
               className="btn-secondary"
@@ -595,6 +644,18 @@ export default function RegisterPage() {
               <ChevronLeft size={16} />
               Back
             </button>
+
+            {fingerprintState === 'success' && (
+              <button
+                type="button"
+                onClick={() => void handleRegister()}
+                disabled={registering}
+                className="btn-primary"
+                id="register-submit-btn"
+              >
+                {hasRegistrationAttempted ? 'Retry Registration' : 'Register Document'}
+              </button>
+            )}
           </div>
         </div>
       )}

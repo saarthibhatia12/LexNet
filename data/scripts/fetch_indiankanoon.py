@@ -50,7 +50,8 @@ def request_json(
     request = Request(
         url,
         headers=build_headers(config.token),
-        method="GET",
+        data=b"",
+        method="POST",
     )
     try:
         with urlopen(request, timeout=config.timeout_seconds) as response:
@@ -61,6 +62,11 @@ def request_json(
         if error.code == 403:
             raise IndianKanoonError(
                 "Indian Kanoon rejected the request with HTTP 403. Check the API token and account permissions."
+            ) from error
+        if error.code == 405:
+            raise IndianKanoonError(
+                f"Indian Kanoon rejected the request with HTTP 405 for {url}. "
+                "The helper now uses POST; verify the endpoint and token."
             ) from error
         raise IndianKanoonError(
             f"Indian Kanoon returned HTTP {error.code} for {url}: {body[:300]}"

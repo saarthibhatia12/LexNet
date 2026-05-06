@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import pickle
 import re
 from dataclasses import dataclass
@@ -53,7 +54,7 @@ def compute_risk_score(doc_hash: str, doc_metadata: dict[str, Any], graph_featur
     features = extract_features(doc_metadata, graph_features)
     flags, rule_score, explanations = evaluate_rules(doc_metadata, graph_features, features)
     model_score = predict_model_score(features)
-    score = round(max(model_score, rule_score), 2)
+    score = round(max(_normalize_score(model_score, fallback=rule_score), rule_score), 2)
 
     if not flags and score <= DEFAULT_LOW_RISK_SCORE:
         explanation = "No risky graph history or metadata anomalies detected."
@@ -151,9 +152,9 @@ def predict_model_score(features: ConflictFeatures) -> float:
     try:
         if hasattr(model, "predict_proba"):
             probabilities = model.predict_proba(vector)
-            return round(float(probabilities[0][1]) * 100, 2)
+            return round(_require_finite_score(float(probabilities[0][1]) * 100), 2)
         prediction = model.predict(vector)
-        return round(float(prediction[0]) * 100, 2)
+        return round(_require_finite_score(float(prediction[0]) * 100), 2)
     except Exception as error:
         LOGGER.warning("Conflict model prediction failed; falling back to rules: %s", error)
         return DEFAULT_LOW_RISK_SCORE
@@ -169,9 +170,22 @@ def load_conflict_model() -> Any | None:
     try:
         with model_path.open("rb") as model_file:
             return pickle.load(model_file)
-    except (OSError, pickle.UnpicklingError, EOFError) as error:
+    except (OSError, pickle.UnpicklingError, EOFError, ImportError, ModuleNotFoundError, AttributeError, ValueError) as error:
         LOGGER.warning("Could not load conflict model from %s: %s", model_path, error)
         return None
+
+
+def _require_finite_score(score: float) -> float:
+    if not math.isfinite(score):
+        raise ValueError(f"Conflict model produced a non-finite score: {score}")
+    return score
+
+
+def _normalize_score(score: float, fallback: float) -> float:
+    if not math.isfinite(score):
+        LOGGER.warning("Conflict score was not finite; using fallback score %.2f", fallback)
+        return fallback
+    return min(max(score, 0.0), 100.0)
 
 
 def _doc_age_days(doc_metadata: dict[str, Any]) -> float:
