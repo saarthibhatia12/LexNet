@@ -118,6 +118,71 @@ DOCUMENTS: tuple[SyntheticDocument, ...] = (
             "Record Clerk: Divya Nair",
         ],
     ),
+    SyntheticDocument(
+        filename="property_claim_01.pdf",
+        title="Registered Sale Deed",
+        subtitle="Primary ownership claim for risk-scoring and dispute detection",
+        metadata=[
+            ("Document Type", "sale_deed"),
+            ("Property ID", "PROP_KA_BLR_042"),
+            ("Survey Number", "SY-88/2B"),
+            ("Location", "Jayanagar, Bengaluru, Karnataka"),
+            ("Buyer", "Ananya Rao"),
+            ("Seller", "Suresh Bhat"),
+            ("Consideration", "INR 94,00,000"),
+            ("Execution Date", "2025-03-04"),
+            ("Registration No", "REG-2025-044"),
+        ],
+        recitals=[
+            "The seller states that he holds clear and marketable title over property PROP_KA_BLR_042 and transfers all rights to the buyer.",
+            "The parties represent that the property is free from competing claims, encumbrances, and pending litigation at the time of execution.",
+        ],
+        clauses=[
+            "The seller conveys title, possession, and all appurtenant rights in the scheduled property to the buyer.",
+            "The consideration of INR 94,00,000 is acknowledged as fully received before presentation for registration.",
+            "The buyer may seek mutation, municipal record updates, and utility transfer in the buyer's own name.",
+            "This deed may be used for verification, registration, and downstream legal review.",
+        ],
+        signatories=[
+            "Seller: Suresh Bhat",
+            "Buyer: Ananya Rao",
+            "Witness 1: Neha Kulkarni",
+            "Witness 2: Arvind Shetty",
+        ],
+    ),
+    SyntheticDocument(
+        filename="property_claim_conflict_01.pdf",
+        title="Objection Affidavit and Prior Claim Notice",
+        subtitle="Conflicting ownership claim over the same property for risk scoring",
+        metadata=[
+            ("Document Type", "objection_affidavit"),
+            ("Property ID", "PROP_KA_BLR_042"),
+            ("Survey Number", "SY-88/2B"),
+            ("Location", "Jayanagar, Bengaluru, Karnataka"),
+            ("Claimant", "Meera Iyer"),
+            ("Opposing Party", "Ananya Rao"),
+            ("Filing Date", "2025-03-06"),
+            ("Case ID", "CASE_2025_044"),
+            ("Court", "Bengaluru Urban Civil Court"),
+        ],
+        recitals=[
+            "The deponent states that property PROP_KA_BLR_042 was already agreed to be sold to Meera Iyer before a rival registration was executed in favour of Ananya Rao.",
+            "The deponent alleges duplicate registration, forged no-objection papers, and a parallel claim over the same survey number SY-88/2B.",
+            "The matter is said to be pending before the Bengaluru Urban Civil Court and an urgent injunction is requested.",
+        ],
+        clauses=[
+            "No transfer, mutation, or third-party encumbrance should be permitted until the rival claims are resolved.",
+            "The same property cannot be exclusively owned by two persons at the same time and the disputed registration should be examined.",
+            "The claimant requests police verification, court scrutiny, and preservation of all title records.",
+            "This notice is intended to preserve rights in a live ownership conflict for local demo and testing.",
+        ],
+        signatories=[
+            "Deponent: Meera Iyer",
+            "Advocate: Rahul Menon",
+            "Witness 1: Pooja Nair",
+            "Witness 2: Kiran Rao",
+        ],
+    ),
 )
 
 

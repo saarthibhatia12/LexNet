@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 
 from src.models.entity import Entity
+from src.models.risk import RiskResult
 from src.models.triple import Triple
 from src.pipeline import graph_insert
 
@@ -194,3 +195,30 @@ def test_insert_entity_mentions_ensures_document_node_for_unsupported_entities(
     assert inserted == 1
     assert "MERGE (d:Document {hash: $docHash})" in queries
     assert "MERGE (d)-[r:" not in queries
+
+
+def test_persist_risk_assessment_updates_document_properties(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_driver = FakeDriver()
+    monkeypatch.setattr(graph_insert, "get_driver", lambda: fake_driver)
+
+    inserted = graph_insert.persist_risk_assessment(
+        "doc-hash-risk",
+        RiskResult(score=12.7, flags=["LOW_CONFIDENCE"], explanation="Synthetic explanation"),
+    )
+
+    calls = fake_driver.session_obj.tx.calls
+    queries = "\n".join(query for query, _parameters in calls)
+    risk_call = next(
+        parameters for query, parameters in calls if "SET d.riskScore = $riskScore" in query
+    )
+
+    assert inserted == 2
+    assert "MERGE (d:Document {hash: $docHash})" in queries
+    assert "SET d.riskScore = $riskScore" in queries
+    assert risk_call["docHash"] == "doc-hash-risk"
+    assert risk_call["riskScore"] == 12.7
+    assert risk_call["flagsJson"] == '["LOW_CONFIDENCE"]'
+    assert risk_call["explanation"] == "Synthetic explanation"
+    assert isinstance(risk_call["assessedAt"], str)

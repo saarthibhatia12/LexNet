@@ -1,43 +1,90 @@
 // ============================================================================
-// LexNet Backend — Document Resolvers
+// LexNet Backend - Document Resolvers
 // ============================================================================
 //
 // Queries:
-//   - getDocument(docHash!) → Document
-//   - getDocumentHistory(docHash!) → [Document]
-//   - verifyDocument(docHash!) → VerificationResult (public)
-//   - getDocumentsByOwner(ownerId!) → [Document]
+//   - getDocument(docHash!) -> Document
+//   - getDocumentHistory(docHash!) -> [Document]
+//   - verifyDocument(docHash!) -> VerificationResult (public)
+//   - getDocumentsByOwner(ownerId!) -> [Document]
 //
 // Mutations:
-//   - registerDocument(input!) → RegisterResult
-//     Full pipeline: hash → encrypt → IPFS → Fabric → QR → NLP trigger
-//   - transferDocument(docHash!, newOwnerId!) → Document
-//   - addDispute(docHash!, caseId!, filedBy?) → Document
-//   - resolveDispute(docHash!, caseId!) → Document
+//   - registerDocument(input!) -> RegisterResult
+//     Full pipeline: hash -> encrypt -> IPFS -> Fabric -> QR -> NLP trigger
+//   - transferDocument(docHash!, newOwnerId!) -> Document
+//   - addDispute(docHash!, caseId!, filedBy?) -> Document
+//   - resolveDispute(docHash!, caseId!) -> Document
 // ============================================================================
 
 import { GraphQLError } from 'graphql';
 import { env } from '../../config/env.js';
 import { logger } from '../../config/logger.js';
 import { requireAuth, type GraphQLContext } from '../directives/authDirective.js';
-import * as fabricService from '../../services/fabricService.js';
-import * as ipfsService from '../../services/ipfsService.js';
 import * as encryptionService from '../../services/encryptionService.js';
+import * as fabricService from '../../services/fabricService.js';
 import * as hashService from '../../services/hashService.js';
+import * as ipfsService from '../../services/ipfsService.js';
+import * as neo4jService from '../../services/neo4jService.js';
 import * as qrService from '../../services/qrService.js';
 import { triggerNlpProcessing } from '../../services/nlpTriggerService.js';
 import { docHashSchema } from '../../utils/validators.js';
 import type {
   DocumentMetadata,
+  DocumentRecord,
   EncryptedPayload,
   VerificationResult,
 } from '../../types/index.js';
 import { DocumentNotFoundError } from '../../types/index.js';
 
+async function enrichDocumentRisk(document: DocumentRecord): Promise<DocumentRecord> {
+  try {
+    const assessment = await neo4jService.getRiskAssessment(document.docHash);
+    if (!assessment) {
+      return document;
+    }
+
+    return {
+      ...document,
+      riskScore: assessment.riskScore,
+    };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown Neo4j error';
+    logger.warn('Failed to enrich document risk score', {
+      docHash: document.docHash,
+      error: message,
+    });
+    return document;
+  }
+}
+
+async function enrichDocumentsRisk(documents: DocumentRecord[]): Promise<DocumentRecord[]> {
+  if (documents.length === 0) {
+    return documents;
+  }
+
+  try {
+    const riskScores = await neo4jService.getRiskScoresByDocumentHashes(
+      documents.map((document) => document.docHash)
+    );
+
+    return documents.map((document) => ({
+      ...document,
+      riskScore: riskScores.get(document.docHash) ?? document.riskScore,
+    }));
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown Neo4j error';
+    logger.warn('Failed to enrich document list risk scores', {
+      count: documents.length,
+      error: message,
+    });
+    return documents;
+  }
+}
+
 export const documentResolvers = {
   Query: {
     // -----------------------------------------------------------------------
-    // getDocument — requires auth
+    // getDocument - requires auth
     // -----------------------------------------------------------------------
     getDocument: async (
       _parent: unknown,
@@ -52,11 +99,12 @@ export const documentResolvers = {
         });
       }
 
-      return fabricService.getDocument(args.docHash);
+      const document = await fabricService.getDocument(args.docHash);
+      return enrichDocumentRisk(document);
     },
 
     // -----------------------------------------------------------------------
-    // getDocumentHistory — requires auth
+    // getDocumentHistory - requires auth
     // -----------------------------------------------------------------------
     getDocumentHistory: async (
       _parent: unknown,
@@ -71,11 +119,12 @@ export const documentResolvers = {
         });
       }
 
-      return fabricService.getDocumentHistory(args.docHash);
+      const history = await fabricService.getDocumentHistory(args.docHash);
+      return enrichDocumentsRisk(history);
     },
 
     // -----------------------------------------------------------------------
-    // verifyDocument — public (no auth)
+    // verifyDocument - public (no auth)
     // -----------------------------------------------------------------------
     verifyDocument: async (
       _parent: unknown,
@@ -92,8 +141,7 @@ export const documentResolvers = {
       const { docHash } = args;
 
       try {
-        // 1. Query blockchain
-        let document;
+        let document: DocumentRecord | null;
         try {
           document = await fabricService.verifyDocument(docHash);
         } catch (error: unknown) {
@@ -115,10 +163,8 @@ export const documentResolvers = {
           };
         }
 
-        // 2. Retrieve from IPFS
         const ipfsBuffer = await ipfsService.retrieveFromIPFS(document.ipfsCID);
 
-        // 3. Parse encrypted payload
         let encryptedPayload: EncryptedPayload;
         try {
           encryptedPayload = JSON.parse(
@@ -128,12 +174,11 @@ export const documentResolvers = {
           return {
             status: 'ERROR',
             docHash,
-            document,
+            document: await enrichDocumentRisk(document),
             message: 'Failed to parse stored document payload',
           };
         }
 
-        // 4. Decrypt
         const decryptedBuffer = encryptionService.decrypt(
           Buffer.from(encryptedPayload.ciphertext, 'base64'),
           Buffer.from(encryptedPayload.iv, 'base64'),
@@ -141,27 +186,26 @@ export const documentResolvers = {
           env.AES_KEY
         );
 
-        // 5. Recompute hash
         const recomputedHash = hashService.computeSHA256(decryptedBuffer);
+        const enrichedDocument = await enrichDocumentRisk(document);
 
-        // 6. Compare
         if (recomputedHash === docHash) {
           return {
             status: 'AUTHENTIC',
             docHash,
-            timestamp: document.createdAt,
-            document,
-            message: 'Document is authentic — hash matches blockchain record',
-          };
-        } else {
-          return {
-            status: 'TAMPERED',
-            docHash,
-            timestamp: document.createdAt,
-            document,
-            message: 'Document has been tampered with — hash mismatch detected',
+            timestamp: enrichedDocument.createdAt,
+            document: enrichedDocument,
+            message: 'Document is authentic - hash matches blockchain record',
           };
         }
+
+        return {
+          status: 'TAMPERED',
+          docHash,
+          timestamp: enrichedDocument.createdAt,
+          document: enrichedDocument,
+          message: 'Document has been tampered with - hash mismatch detected',
+        };
       } catch (error: unknown) {
         const message =
           error instanceof Error ? error.message : 'Verification failed';
@@ -175,7 +219,7 @@ export const documentResolvers = {
     },
 
     // -----------------------------------------------------------------------
-    // getDocumentsByOwner — requires auth
+    // getDocumentsByOwner - requires auth
     // -----------------------------------------------------------------------
     getDocumentsByOwner: async (
       _parent: unknown,
@@ -189,13 +233,14 @@ export const documentResolvers = {
         });
       }
 
-      return fabricService.getDocumentsByOwner(args.ownerId);
+      const documents = await fabricService.getDocumentsByOwner(args.ownerId);
+      return enrichDocumentsRisk(documents);
     },
   },
 
   Mutation: {
     // -----------------------------------------------------------------------
-    // registerDocument — full pipeline (requires auth)
+    // registerDocument - full pipeline (requires auth)
     // -----------------------------------------------------------------------
     registerDocument: async (
       _parent: unknown,
@@ -218,7 +263,6 @@ export const documentResolvers = {
       const user = requireAuth(context);
       const { input } = args;
 
-      // Validate required fields
       if (!input.fileBase64 || input.fileBase64.length === 0) {
         throw new GraphQLError('File content is required', {
           extensions: { code: 'BAD_USER_INPUT' },
@@ -241,16 +285,10 @@ export const documentResolvers = {
         userId: user.userId,
       });
 
-      // 1. Decode base64 file content
       const fileBuffer = Buffer.from(input.fileBase64, 'base64');
-
-      // 2. Compute SHA-256 hash
       const docHash = hashService.computeSHA256(fileBuffer);
-
-      // 3. Encrypt with AES-256-GCM
       const encResult = encryptionService.encrypt(fileBuffer, env.AES_KEY);
 
-      // 4. Package as JSON payload for IPFS
       const encryptedPayload: EncryptedPayload = {
         ciphertext: encResult.ciphertext.toString('base64'),
         iv: encResult.iv.toString('base64'),
@@ -258,10 +296,8 @@ export const documentResolvers = {
       };
       const payloadBuffer = Buffer.from(JSON.stringify(encryptedPayload));
 
-      // 5. Upload to IPFS
       const ipfsResult = await ipfsService.uploadToIPFS(payloadBuffer);
 
-      // 6. Store on blockchain
       const timestamp = new Date().toISOString();
       const metadata: DocumentMetadata = input.metadata ?? {};
 
@@ -275,10 +311,8 @@ export const documentResolvers = {
         metadata
       );
 
-      // 7. Generate QR code
       const qrResult = await qrService.generateQRWithMetadata(docHash);
 
-      // 8. Trigger NLP processing (fire-and-forget — never blocks)
       triggerNlpProcessing(
         docHash,
         ipfsResult.cid,
@@ -303,7 +337,7 @@ export const documentResolvers = {
     },
 
     // -----------------------------------------------------------------------
-    // transferDocument — requires auth
+    // transferDocument - requires auth
     // -----------------------------------------------------------------------
     transferDocument: async (
       _parent: unknown,
@@ -325,11 +359,12 @@ export const documentResolvers = {
       }
 
       await fabricService.transferDocument(args.docHash, args.newOwnerId);
-      return fabricService.getDocument(args.docHash);
+      const document = await fabricService.getDocument(args.docHash);
+      return enrichDocumentRisk(document);
     },
 
     // -----------------------------------------------------------------------
-    // addDispute — requires auth
+    // addDispute - requires auth
     // -----------------------------------------------------------------------
     addDispute: async (
       _parent: unknown,
@@ -352,11 +387,12 @@ export const documentResolvers = {
 
       const filedBy = args.filedBy || user.userId;
       await fabricService.addDispute(args.docHash, args.caseId, filedBy);
-      return fabricService.getDocument(args.docHash);
+      const document = await fabricService.getDocument(args.docHash);
+      return enrichDocumentRisk(document);
     },
 
     // -----------------------------------------------------------------------
-    // resolveDispute — requires auth
+    // resolveDispute - requires auth
     // -----------------------------------------------------------------------
     resolveDispute: async (
       _parent: unknown,
@@ -378,7 +414,8 @@ export const documentResolvers = {
       }
 
       await fabricService.resolveDispute(args.docHash, args.caseId);
-      return fabricService.getDocument(args.docHash);
+      const document = await fabricService.getDocument(args.docHash);
+      return enrichDocumentRisk(document);
     },
   },
 };

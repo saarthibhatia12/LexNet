@@ -23,6 +23,7 @@ import type {
   GraphEdge,
   NodeSearchResult,
   PropertyTimeline,
+  RiskAssessment,
   TimelineEvent,
 } from '../types/index.js';
 import { DEFAULT_GRAPH_DEPTH, MAX_GRAPH_DEPTH } from '../utils/constants.js';
@@ -381,4 +382,75 @@ export async function getPropertyTimeline(propertyId: string): Promise<PropertyT
     propertyId,
     events,
   };
+}
+
+/**
+ * Get the risk assessment for a single document from Neo4j.
+ *
+ * Returns null when the document has not been assessed yet or has no graph node.
+ */
+export async function getRiskAssessment(docHash: string): Promise<RiskAssessment | null> {
+  if (!docHash || docHash.trim().length === 0) {
+    throw new ValidationError('docHash must not be empty');
+  }
+
+  const results = await runCypher<RiskAssessment>(
+    `
+      MATCH (d:Document {hash: $docHash})
+      RETURN d.hash AS docHash,
+             coalesce(d.riskScore, 0) AS riskScore,
+             coalesce(d.flags, '[]') AS flagsJson,
+             coalesce(d.assessedAt, d.createdAt, '') AS assessedAt
+    `,
+    { docHash: docHash.trim() },
+    (record: Neo4jRecord) => {
+      let flags: RiskAssessment['flags'] = [];
+      try {
+        flags = JSON.parse((record.get('flagsJson') as string) ?? '[]') as RiskAssessment['flags'];
+      } catch {
+        flags = [];
+      }
+
+      return {
+        docHash: record.get('docHash') as string,
+        riskScore: Number(record.get('riskScore') as number),
+        flags,
+        assessedAt: String(record.get('assessedAt') as string),
+      };
+    }
+  );
+
+  return results[0] ?? null;
+}
+
+/**
+ * Get risk scores for multiple documents in a single query.
+ */
+export async function getRiskScoresByDocumentHashes(docHashes: string[]): Promise<Map<string, number>> {
+  const normalizedHashes = Array.from(
+    new Set(
+      docHashes
+        .map((docHash) => docHash.trim())
+        .filter((docHash) => docHash.length > 0)
+    )
+  );
+
+  if (normalizedHashes.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const results = await runCypher<{ docHash: string; riskScore: number }>(
+    `
+      MATCH (d:Document)
+      WHERE d.hash IN $docHashes
+      RETURN d.hash AS docHash, coalesce(d.riskScore, 0) AS riskScore
+    `,
+    { docHashes: normalizedHashes },
+    (record: Neo4jRecord) => ({
+      docHash: record.get('docHash') as string,
+      riskScore: Number(record.get('riskScore') as number),
+    })
+  );
+
+  return new Map(results.map((result) => [result.docHash, result.riskScore]));
 }

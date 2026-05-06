@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 from neo4j import Transaction
 from neo4j.exceptions import Neo4jError
 
 from src.models.entity import Entity
+from src.models.risk import RiskResult
 from src.models.triple import Triple
 from src.utils.neo4j_driver import get_driver
 
@@ -104,6 +107,29 @@ def insert_entity_mentions(entities: list[Entity], doc_hash: str) -> int:
         raise GraphInsertError(f"Failed to insert entity mentions for document {cleaned_doc_hash}: {error}") from error
 
 
+def persist_risk_assessment(doc_hash: str, risk_result: RiskResult) -> int:
+    cleaned_doc_hash = doc_hash.strip()
+    if not cleaned_doc_hash:
+        raise ValueError("doc_hash must not be empty.")
+
+    assessed_at = datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    try:
+        with get_driver().session() as session:
+            return int(
+                session.execute_write(
+                    _persist_risk_assessment_tx,
+                    cleaned_doc_hash,
+                    risk_result.score,
+                    json.dumps(risk_result.flags),
+                    risk_result.explanation,
+                    assessed_at,
+                )
+            )
+    except Neo4jError as error:
+        raise GraphInsertError(f"Failed to persist risk assessment for document {cleaned_doc_hash}: {error}") from error
+
+
 def _insert_triples_tx(tx: Transaction, triples: list[Triple], doc_hash: str) -> int:
     touched = _ensure_document_node_tx(tx, doc_hash)
 
@@ -145,6 +171,34 @@ def _insert_entity_mentions_tx(tx: Transaction, mentions: list[DocumentMention],
         )
 
     return touched
+
+
+def _persist_risk_assessment_tx(
+    tx: Transaction,
+    doc_hash: str,
+    risk_score: float,
+    flags_json: str,
+    explanation: str,
+    assessed_at: str,
+) -> int:
+    touched = _ensure_document_node_tx(tx, doc_hash)
+    result = tx.run(
+        """
+        MATCH (d:Document {hash: $docHash})
+        SET d.riskScore = $riskScore,
+            d.flags = $flagsJson,
+            d.riskExplanation = $explanation,
+            d.assessedAt = $assessedAt
+        """,
+        {
+            "docHash": doc_hash,
+            "riskScore": risk_score,
+            "flagsJson": flags_json,
+            "explanation": explanation,
+            "assessedAt": assessed_at,
+        },
+    )
+    return touched + _write_count(result)
 
 
 def _normalize_triple(triple: Triple) -> Triple:
