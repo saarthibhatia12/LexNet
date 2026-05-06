@@ -344,20 +344,20 @@ func (c *LexNetContract) GetDocumentsByOwner(ctx contractapi.TransactionContextI
 	return documents, nil
 }
 
-func (c *LexNetContract) VerifyDocument(ctx contractapi.TransactionContextInterface, docHash string) (string, error) {
+func (c *LexNetContract) VerifyDocument(ctx contractapi.TransactionContextInterface, docHash string) (*DocumentRecord, error) {
 	if err := validateRequired("docHash", docHash); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	state, err := ctx.GetStub().GetState(documentStateKey(docHash))
+	record, err := getDocumentRecord(ctx, docHash)
 	if err != nil {
-		return "", fmt.Errorf("failed to verify document state for %s: %w", docHash, err)
+		return nil, fmt.Errorf("failed to verify document state for %s: %w", docHash, err)
 	}
-	if state == nil {
-		return "NOT_FOUND", nil
+	if record == nil {
+		return nil, nil
 	}
 
-	return "EXISTS", nil
+	return record, nil
 }
 
 func validateRequired(field string, value string) error {

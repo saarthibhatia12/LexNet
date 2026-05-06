@@ -38,6 +38,18 @@ function parseResponse<T>(buffer: Buffer): T | null {
 }
 
 /**
+ * Parse the legacy VerifyDocument response used by older chaincode revisions.
+ * Legacy payloads return plain-text status strings instead of a JSON document.
+ */
+function parseLegacyVerifyStatus(buffer: Buffer): 'EXISTS' | 'NOT_FOUND' | null {
+  const raw = buffer.toString('utf-8').trim();
+  if (raw === 'EXISTS' || raw === 'NOT_FOUND') {
+    return raw;
+  }
+  return null;
+}
+
+/**
  * Validate that a string argument is non-empty.
  * Mirrors the chaincode's own rejection of empty strings.
  */
@@ -302,6 +314,14 @@ export async function verifyDocument(docHash: string): Promise<DocumentRecord | 
 
   const result = await fabricCall('VerifyDocument', async (contract) => {
     const buffer = await contract.evaluateTransaction('VerifyDocument', docHash);
+    const legacyStatus = parseLegacyVerifyStatus(buffer);
+    if (legacyStatus === 'NOT_FOUND') {
+      return null;
+    }
+    if (legacyStatus === 'EXISTS') {
+      const documentBuffer = await contract.evaluateTransaction('GetDocument', docHash);
+      return parseResponse<DocumentRecord>(documentBuffer);
+    }
     return parseResponse<DocumentRecord>(buffer);
   });
 

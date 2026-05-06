@@ -423,15 +423,19 @@ func TestVerifyDocumentReturnsNotFoundAndExists(t *testing.T) {
 
 	notFound := invoke(stub, "VerifyDocument", "hash-missing")
 	requireOK(t, notFound, "VerifyDocument(not-found)")
-	if string(notFound.Payload) != "NOT_FOUND" {
-		t.Fatalf("expected NOT_FOUND, got %s", string(notFound.Payload))
+	if len(notFound.Payload) != 0 {
+		t.Fatalf("expected empty payload for missing document, got %s", string(notFound.Payload))
 	}
 
 	mustStoreDocument(t, stub, "hash-present", "owner-A")
 
 	exists := invoke(stub, "VerifyDocument", "hash-present")
 	requireOK(t, exists, "VerifyDocument(exists)")
-	if string(exists.Payload) != "EXISTS" {
-		t.Fatalf("expected EXISTS, got %s", string(exists.Payload))
+	doc := decodeDocument(t, exists.Payload)
+	if doc.DocHash != "hash-present" {
+		t.Fatalf("expected hash-present, got %s", doc.DocHash)
+	}
+	if doc.OwnerID != "owner-A" {
+		t.Fatalf("expected owner-A, got %s", doc.OwnerID)
 	}
 }

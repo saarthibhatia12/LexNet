@@ -14,7 +14,7 @@
 import { jest } from '@jest/globals';
 
 // ---------------------------------------------------------------------------
-// Mock the fabric config module so getContract() returns our mock
+// Mock the fabric config module so connectToFabric() returns our mock
 // ---------------------------------------------------------------------------
 
 const mockSubmitTransaction = jest.fn<(...args: string[]) => Promise<Buffer>>();
@@ -28,7 +28,7 @@ const mockContract = {
 };
 
 jest.unstable_mockModule('../../src/config/fabric.js', () => ({
-  getContract: () => mockContract,
+  connectToFabric: async () => mockContract,
 }));
 
 // Mock the logger to suppress output during tests
@@ -334,12 +334,45 @@ describe('fabricService', () => {
       );
     });
 
+    it('should support legacy VerifyDocument responses by fetching GetDocument when status is EXISTS', async () => {
+      mockEvaluateTransaction
+        .mockResolvedValueOnce(Buffer.from('EXISTS'))
+        .mockResolvedValueOnce(Buffer.from(JSON.stringify(sampleDoc)));
+
+      const result = await verifyDocument(sampleDoc.docHash);
+
+      expect(result).toEqual(sampleDoc);
+      expect(mockEvaluateTransaction).toHaveBeenNthCalledWith(
+        1,
+        'VerifyDocument',
+        sampleDoc.docHash
+      );
+      expect(mockEvaluateTransaction).toHaveBeenNthCalledWith(
+        2,
+        'GetDocument',
+        sampleDoc.docHash
+      );
+    });
+
     it('should return null when document is not registered', async () => {
       mockEvaluateTransaction.mockResolvedValue(Buffer.alloc(0));
 
       const result = await verifyDocument('not-registered-hash');
 
       expect(result).toBeNull();
+    });
+
+    it('should return null for legacy NOT_FOUND verify responses', async () => {
+      mockEvaluateTransaction.mockResolvedValue(Buffer.from('NOT_FOUND'));
+
+      const result = await verifyDocument('not-registered-hash');
+
+      expect(result).toBeNull();
+      expect(mockEvaluateTransaction).toHaveBeenCalledTimes(1);
+      expect(mockEvaluateTransaction).toHaveBeenCalledWith(
+        'VerifyDocument',
+        'not-registered-hash'
+      );
     });
 
     it('should throw ValidationError for empty docHash', async () => {
