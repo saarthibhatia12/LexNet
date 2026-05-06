@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from src.models.entity import Entity
 from src.models.triple import Triple
 from src.pipeline import graph_insert
 
@@ -139,3 +140,57 @@ def test_insert_triples_rejects_unsupported_relationship(monkeypatch: pytest.Mon
 def test_insert_triples_rejects_empty_doc_hash() -> None:
     with pytest.raises(ValueError, match="doc_hash"):
         graph_insert.insert_triples([], " ")
+
+
+def test_insert_entity_mentions_creates_document_links_when_no_triples(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_driver = FakeDriver()
+    monkeypatch.setattr(graph_insert, "get_driver", lambda: fake_driver)
+
+    inserted = graph_insert.insert_entity_mentions(
+        [
+            Entity(text="Ram Kumar", label="PERSON", start=0, end=9, confidence=0.95),
+            Entity(text="PROP-77", label="PROPERTY_ID", start=10, end=17, confidence=0.96),
+            Entity(
+                text="Section 17 of Registration Act",
+                label="LEGAL_SECTION",
+                start=18,
+                end=48,
+                confidence=0.94,
+            ),
+        ],
+        "doc-hash-mentions",
+    )
+
+    calls = fake_driver.session_obj.tx.calls
+    queries = "\n".join(query for query, _parameters in calls)
+
+    assert inserted == 7
+    assert "MERGE (d:Document {hash: $docHash})" in queries
+    assert "MERGE (d)-[r:INVOLVES {sourceDoc: $docHash}]->(n)" in queries
+    assert "MERGE (d)-[r:CONCERNS {sourceDoc: $docHash}]->(n)" in queries
+    assert "MERGE (d)-[r:REFERENCES {sourceDoc: $docHash}]->(n)" in queries
+    assert any(parameters.get("name") == "Ram Kumar" for _query, parameters in calls)
+    assert any(parameters.get("id") == "PROP-77" for _query, parameters in calls)
+
+
+def test_insert_entity_mentions_ensures_document_node_for_unsupported_entities(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fake_driver = FakeDriver()
+    monkeypatch.setattr(graph_insert, "get_driver", lambda: fake_driver)
+
+    inserted = graph_insert.insert_entity_mentions(
+        [
+            Entity(text="2026-05-06", label="DATE", start=0, end=10, confidence=0.9),
+        ],
+        "doc-hash-root",
+    )
+
+    calls = fake_driver.session_obj.tx.calls
+    queries = "\n".join(query for query, _parameters in calls)
+
+    assert inserted == 1
+    assert "MERGE (d:Document {hash: $docHash})" in queries
+    assert "MERGE (d)-[r:" not in queries

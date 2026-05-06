@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from src.config import Settings, get_settings
 from src.pipeline.conflict import compute_risk_score, load_conflict_model
-from src.pipeline.graph_insert import insert_triples
+from src.pipeline.graph_insert import ensure_document_node, insert_entity_mentions, insert_triples
 from src.pipeline.ner import extract_entities, is_transformer_pipeline_ready
 from src.pipeline.ocr import EncryptedPayloadError, OCRError, decode_pdf_bytes_from_ipfs_payload, extract_text_from_pdf
 from src.pipeline.rel_extract import extract_relations
@@ -174,6 +174,10 @@ def create_app(settings: Settings | None = None) -> Flask:
             entities = extract_entities(cleaned_text)
             triples = extract_relations(cleaned_text, entities)
             triples_inserted = insert_triples(triples, payload.doc_hash)
+            if triples_inserted == 0:
+                mention_count = insert_entity_mentions(entities, payload.doc_hash)
+                if mention_count == 0:
+                    ensure_document_node(payload.doc_hash)
             graph_features = build_graph_features(payload.metadata, len(entities), triples_inserted)
             risk_result = compute_risk_score(payload.doc_hash, payload.metadata, graph_features)
 

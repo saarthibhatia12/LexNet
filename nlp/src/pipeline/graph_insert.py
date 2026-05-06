@@ -9,6 +9,7 @@ from typing import Any
 from neo4j import Transaction
 from neo4j.exceptions import Neo4jError
 
+from src.models.entity import Entity
 from src.models.triple import Triple
 from src.utils.neo4j_driver import get_driver
 
@@ -49,6 +50,13 @@ class GraphNode:
     properties: dict[str, Any]
 
 
+@dataclass(frozen=True, slots=True)
+class DocumentMention:
+    relationship: str
+    node: GraphNode
+    source_span: str
+
+
 def insert_triples(triples: list[Triple], doc_hash: str) -> int:
     cleaned_doc_hash = doc_hash.strip()
     if not cleaned_doc_hash:
@@ -71,15 +79,33 @@ def insert_triples(triples: list[Triple], doc_hash: str) -> int:
         raise GraphInsertError(f"Failed to insert triples for document {cleaned_doc_hash}: {error}") from error
 
 
+def ensure_document_node(doc_hash: str) -> int:
+    cleaned_doc_hash = doc_hash.strip()
+    if not cleaned_doc_hash:
+        raise ValueError("doc_hash must not be empty.")
+
+    try:
+        with get_driver().session() as session:
+            return int(session.execute_write(_ensure_document_node_tx, cleaned_doc_hash))
+    except Neo4jError as error:
+        raise GraphInsertError(f"Failed to ensure document node for {cleaned_doc_hash}: {error}") from error
+
+
+def insert_entity_mentions(entities: list[Entity], doc_hash: str) -> int:
+    cleaned_doc_hash = doc_hash.strip()
+    if not cleaned_doc_hash:
+        raise ValueError("doc_hash must not be empty.")
+
+    mentions = _normalize_entity_mentions(entities)
+    try:
+        with get_driver().session() as session:
+            return int(session.execute_write(_insert_entity_mentions_tx, mentions, cleaned_doc_hash))
+    except Neo4jError as error:
+        raise GraphInsertError(f"Failed to insert entity mentions for document {cleaned_doc_hash}: {error}") from error
+
+
 def _insert_triples_tx(tx: Transaction, triples: list[Triple], doc_hash: str) -> int:
-    doc_result = tx.run(
-        """
-        MERGE (d:Document {hash: $docHash})
-        ON CREATE SET d.createdFromNlp = true
-        """,
-        {"docHash": doc_hash},
-    )
-    touched = _write_count(doc_result)
+    touched = _ensure_document_node_tx(tx, doc_hash)
 
     for triple in triples:
         subject = _node_for_value(triple.subject)
@@ -94,6 +120,33 @@ def _insert_triples_tx(tx: Transaction, triples: list[Triple], doc_hash: str) ->
     return touched
 
 
+def _ensure_document_node_tx(tx: Transaction, doc_hash: str) -> int:
+    doc_result = tx.run(
+        """
+        MERGE (d:Document {hash: $docHash})
+        ON CREATE SET d.createdFromNlp = true
+        """,
+        {"docHash": doc_hash},
+    )
+    return _write_count(doc_result)
+
+
+def _insert_entity_mentions_tx(tx: Transaction, mentions: list[DocumentMention], doc_hash: str) -> int:
+    touched = _ensure_document_node_tx(tx, doc_hash)
+
+    for mention in mentions:
+        touched += _merge_node(tx, mention.node)
+        touched += _merge_document_relation(
+            tx,
+            mention.relationship,
+            mention.node,
+            doc_hash,
+            mention.source_span,
+        )
+
+    return touched
+
+
 def _normalize_triple(triple: Triple) -> Triple:
     subject = " ".join(triple.subject.split())
     object_ = " ".join(triple.object_.split())
@@ -104,6 +157,54 @@ def _normalize_triple(triple: Triple) -> Triple:
     if subject.casefold() == object_.casefold():
         raise ValueError("Self-referencing triples are not allowed.")
     return Triple(subject=subject, predicate=predicate, object_=object_, source_span=source_span)
+
+
+def _normalize_entity_mentions(entities: list[Entity]) -> list[DocumentMention]:
+    mentions: list[DocumentMention] = []
+    seen: set[tuple[str, str, tuple[Any, ...], str]] = set()
+
+    for entity in entities:
+        mention = _document_mention_for_entity(entity)
+        if mention is None:
+            continue
+
+        identity = (
+            mention.relationship,
+            mention.node.label,
+            _node_identity(mention.node),
+            mention.source_span,
+        )
+        if identity in seen:
+            continue
+
+        mentions.append(mention)
+        seen.add(identity)
+
+    return mentions
+
+
+def _document_mention_for_entity(entity: Entity) -> DocumentMention | None:
+    normalized_text = " ".join(entity.text.split()).strip()
+    if not normalized_text:
+        return None
+
+    if entity.label == "PERSON":
+        node = GraphNode(
+            "Person",
+            {"name": normalized_text, "id": _stable_person_id(normalized_text)},
+        )
+        return DocumentMention("INVOLVES", node, normalized_text)
+
+    if entity.label == "ORGANISATION":
+        return DocumentMention("INVOLVES", _node_for_value(normalized_text), normalized_text)
+
+    if entity.label in {"PROPERTY_ID", "SURVEY_NUMBER"}:
+        return DocumentMention("CONCERNS", _node_for_value(normalized_text), normalized_text)
+
+    if entity.label == "LEGAL_SECTION":
+        return DocumentMention("REFERENCES", _node_for_value(normalized_text), normalized_text)
+
+    return None
 
 
 def _node_for_value(value: str) -> GraphNode:
@@ -210,6 +311,27 @@ def _merge_document_mentions(
     return touched
 
 
+def _merge_document_relation(
+    tx: Transaction,
+    relationship: str,
+    node: GraphNode,
+    doc_hash: str,
+    source_span: str,
+) -> int:
+    if node.label == "Document" and node.properties.get("hash") == doc_hash:
+        return 0
+
+    validated_relationship = _validate_relationship(relationship)
+    query = (
+        "MATCH (d:Document {hash: $docHash})\n"
+        f"MATCH (n:{node.label} {_node_match_pattern('node', node)})\n"
+        f"MERGE (d)-[r:{validated_relationship} {{sourceDoc: $docHash}}]->(n)\n"
+        "SET r.sourceSpan = $sourceSpan"
+    )
+    result = tx.run(query, _document_mention_parameters(node, doc_hash, source_span))
+    return _write_count(result)
+
+
 def _node_match_pattern(prefix: str, node: GraphNode) -> str:
     patterns = {
         "Person": f"{{name: ${prefix}Name, id: ${prefix}Id}}",
@@ -249,6 +371,22 @@ def _prefixed_node_parameters(prefix: str, node: GraphNode) -> dict[str, Any]:
     for key, value in node.properties.items():
         params[f"{prefix}{key[:1].upper()}{key[1:]}"] = value
     return params
+
+
+def _node_identity(node: GraphNode) -> tuple[Any, ...]:
+    if node.label == "Person":
+        return (node.properties.get("name"), node.properties.get("id"))
+    if node.label == "Property":
+        return (node.properties.get("id"),)
+    if node.label == "Document":
+        return (node.properties.get("hash"),)
+    if node.label == "Court":
+        return (node.properties.get("name"),)
+    if node.label == "LegalAct":
+        return (node.properties.get("name"), node.properties.get("section"))
+    if node.label == "Organisation":
+        return (node.properties.get("name"),)
+    return tuple(sorted(node.properties.items()))
 
 
 def _validate_relationship(predicate: str) -> str:

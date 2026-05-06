@@ -165,15 +165,11 @@ export async function getKnowledgeGraph(
   // This retrieves all nodes and relationships within `depth` hops of the document
   const cypher = `
     MATCH (d:Document {hash: $docHash})
-    CALL {
-      WITH d
-      MATCH path = (d)-[*1..${safeDepth}]-(connected)
-      RETURN nodes(path) AS pathNodes, relationships(path) AS pathRels
-    }
-    WITH d, collect(pathNodes) AS allPathNodes, collect(pathRels) AS allPathRels
+    OPTIONAL MATCH path = (d)-[*1..${safeDepth}]-(connected)
+    WITH d, [p IN collect(path) WHERE p IS NOT NULL] AS paths
     WITH d,
-         reduce(acc = [], nodes IN allPathNodes | acc + nodes) AS flatNodes,
-         reduce(acc = [], rels IN allPathRels | acc + rels) AS flatRels
+         reduce(acc = [], p IN paths | acc + nodes(p)) AS flatNodes,
+         reduce(acc = [], p IN paths | acc + relationships(p)) AS flatRels
     RETURN d, flatNodes, flatRels
   `;
 
