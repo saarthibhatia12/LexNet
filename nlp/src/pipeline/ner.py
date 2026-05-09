@@ -4,7 +4,7 @@ import json
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import spacy
 from spacy.language import Language
@@ -17,6 +17,8 @@ from src.models.entity import Entity
 MIN_CONFIDENCE = 0.5
 WINDOW_SIZE = 512
 WINDOW_OVERLAP = 128
+FALLBACK_WINDOW_SIZE = 128
+FALLBACK_WINDOW_OVERLAP = 32
 NER_LABELS_PATH = NLP_ROOT / "data" / "ner_labels.json"
 GENERIC_LABEL_PATTERN = re.compile(r"^LABEL_\d+$")
 SEQUENCE_LABEL_PREFIX_PATTERN = re.compile(r"^(?:B|I|L|U|S|E)[-_](?P<label>.+)$")
@@ -272,43 +274,73 @@ def get_nlp() -> Language:
     return nlp
 
 
-def split_text_into_windows(
-    text: str,
-    max_tokens: int = WINDOW_SIZE,
-    overlap: int = WINDOW_OVERLAP,
-) -> list[tuple[int, str]]:
-    stripped_text = text.strip()
-    if not stripped_text:
+def _normalize_window_params(max_tokens: int, overlap: int) -> tuple[int, int]:
+    safe_max_tokens = max(int(max_tokens), 1)
+    safe_overlap = min(max(int(overlap), 0), safe_max_tokens - 1)
+    return safe_max_tokens, safe_overlap
+
+
+def _resolve_token_window_size(tokenizer: Any, requested_max_tokens: int) -> int:
+    safe_requested_tokens = max(int(requested_max_tokens), 1)
+    model_max_length = getattr(tokenizer, "model_max_length", None)
+    if not isinstance(model_max_length, int) or model_max_length <= 0 or model_max_length > 100_000:
+        return safe_requested_tokens
+
+    try:
+        special_tokens = int(tokenizer.num_special_tokens_to_add(pair=False))
+    except Exception:
+        special_tokens = 0
+
+    return min(safe_requested_tokens, max(model_max_length - max(special_tokens, 0), 1))
+
+
+def _offset_batches(offset_mapping: list[Any]) -> list[list[tuple[int, int]]]:
+    if not offset_mapping:
         return []
 
-    tokenizer = get_tokenizer()
-    if tokenizer is not None:
-        try:
-            encoded = tokenizer(
-                text,
-                add_special_tokens=False,
-                return_offsets_mapping=True,
-                truncation=False,
-            )
-            offsets = encoded.get("offset_mapping", [])
-            offsets = [offset for offset in offsets if offset[1] > offset[0]]
-            if offsets:
-                if len(offsets) <= max_tokens:
-                    return [(0, text)]
+    first_item = offset_mapping[0]
+    if isinstance(first_item, tuple):
+        return [[(int(start), int(end)) for start, end in offset_mapping]]
+    if isinstance(first_item, list) and len(first_item) == 2 and all(isinstance(value, int) for value in first_item):
+        return [[(int(start), int(end)) for start, end in offset_mapping]]
 
-                windows: list[tuple[int, str]] = []
-                step = max_tokens - overlap
-                for start_index in range(0, len(offsets), step):
-                    end_index = min(start_index + max_tokens, len(offsets))
-                    start_char = offsets[start_index][0]
-                    end_char = offsets[end_index - 1][1]
-                    windows.append((start_char, text[start_char:end_char]))
-                    if end_index == len(offsets):
-                        break
-                return windows
-        except Exception:
-            pass
+    return [
+        [(int(start), int(end)) for start, end in batch]
+        for batch in offset_mapping
+    ]
 
+
+def _tokenizer_windows(text: str, tokenizer: Any, max_tokens: int, overlap: int) -> list[tuple[int, str]]:
+    encoded = tokenizer(
+        text,
+        add_special_tokens=False,
+        return_offsets_mapping=True,
+        truncation=True,
+        max_length=max_tokens,
+        stride=overlap,
+        return_overflowing_tokens=True,
+    )
+    windows: list[tuple[int, str]] = []
+    seen_spans: set[tuple[int, int]] = set()
+
+    for offsets in _offset_batches(encoded.get("offset_mapping", [])):
+        valid_offsets = [(start, end) for start, end in offsets if end > start]
+        if not valid_offsets:
+            continue
+
+        start_char = valid_offsets[0][0]
+        end_char = valid_offsets[-1][1]
+        span = (start_char, end_char)
+        if span in seen_spans:
+            continue
+
+        windows.append((start_char, text[start_char:end_char]))
+        seen_spans.add(span)
+
+    return windows
+
+
+def _whitespace_windows(text: str, max_tokens: int, overlap: int) -> list[tuple[int, str]]:
     matches = list(re.finditer(r"\S+", text))
     if not matches:
         return []
@@ -325,6 +357,36 @@ def split_text_into_windows(
         if end_index == len(matches):
             break
     return windows
+
+
+def split_text_into_windows(
+    text: str,
+    max_tokens: int = WINDOW_SIZE,
+    overlap: int = WINDOW_OVERLAP,
+) -> list[tuple[int, str]]:
+    stripped_text = text.strip()
+    if not stripped_text:
+        return []
+
+    max_tokens, overlap = _normalize_window_params(max_tokens, overlap)
+    tokenizer = get_tokenizer()
+    if tokenizer is not None:
+        max_tokens = _resolve_token_window_size(tokenizer, max_tokens)
+        max_tokens, overlap = _normalize_window_params(max_tokens, overlap)
+        try:
+            windows = _tokenizer_windows(text, tokenizer, max_tokens, overlap)
+            if windows:
+                return windows
+        except Exception:
+            pass
+
+        fallback_max_tokens, fallback_overlap = _normalize_window_params(
+            min(FALLBACK_WINDOW_SIZE, max_tokens),
+            min(FALLBACK_WINDOW_OVERLAP, overlap),
+        )
+        return _whitespace_windows(text, fallback_max_tokens, fallback_overlap)
+
+    return _whitespace_windows(text, max_tokens, overlap)
 
 
 def create_entity(text: str, label: str, start: int, end: int, confidence: float) -> Entity | None:

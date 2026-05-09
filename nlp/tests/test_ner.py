@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.pipeline import ner
 from src.pipeline.ner import create_entity, extract_entities, normalize_label
 
 
@@ -35,6 +36,27 @@ def test_extract_entities_sliding_window_for_long_text() -> None:
 
 def test_extract_entities_empty_text_returns_empty_list() -> None:
     assert extract_entities("") == []
+
+
+def test_split_text_into_windows_uses_safe_fallback_when_tokenizer_offsets_fail(
+    monkeypatch: object,
+) -> None:
+    class FakeTokenizer:
+        model_max_length = 512
+
+        def num_special_tokens_to_add(self, pair: bool = False) -> int:
+            return 2
+
+        def __call__(self, *_args: object, **_kwargs: object) -> dict[str, object]:
+            raise ValueError("offset mapping unavailable")
+
+    text = " ".join(f"token{i}" for i in range(845))
+    monkeypatch.setattr(ner, "get_tokenizer", lambda: FakeTokenizer())
+
+    windows = ner.split_text_into_windows(text)
+
+    assert len(windows) > 1
+    assert max(len(window_text.split()) for _offset, window_text in windows) <= ner.FALLBACK_WINDOW_SIZE
 
 
 def test_normalize_label_maps_per_alias_to_person() -> None:

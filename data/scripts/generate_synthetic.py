@@ -183,6 +183,105 @@ DOCUMENTS: tuple[SyntheticDocument, ...] = (
             "Witness 2: Kiran Rao",
         ],
     ),
+    SyntheticDocument(
+        filename="rapid_transfer_stack_01.pdf",
+        title="Rapid Transfer Stack Deed Bundle",
+        subtitle="Compressed ownership chain designed to trigger rapid-transfer and graph-complexity alerts",
+        metadata=[
+            ("Document Type", "sale_deed_bundle"),
+            ("Property ID", "PROP_KA_BLR_077"),
+            ("Survey Number", "Sy.No.45/7A"),
+            ("Location", "Whitefield, Bengaluru, Karnataka"),
+            ("Transfer Chain", "Kavya Nair -> Rohan Das -> Punit Arora -> Leena Thomas -> Dev Malhotra"),
+            ("Registrar Office", "Bengaluru East Registrar Office"),
+            ("Consideration", "INR 9,85,00,000"),
+            ("Timeline", "14 January 2025 to 02 March 2025"),
+        ],
+        recitals=[
+            "Kavya Nair sold property PROP_KA_BLR_077 to Rohan Das on 14 January 2025.",
+            "Rohan Das transferred property PROP_KA_BLR_077 to Punit Arora on 03 February 2025.",
+            "Punit Arora conveyed property PROP_KA_BLR_077 to Leena Thomas on 19 February 2025.",
+            "Leena Thomas sold property PROP_KA_BLR_077 to Dev Malhotra on 02 March 2025.",
+            "The same survey parcel Sy.No.45/7A was repeatedly presented before Bengaluru East Registrar Office within seven weeks.",
+        ],
+        clauses=[
+            "Metropolitan Bank Limited recorded a pending mortgage review even as the transfer chain continued without cooling-off period.",
+            "This bundle refers to Section 17 of Registration Act and Section 52 of Transfer of Property Act for downstream verification review.",
+            "The parties acknowledge that repeated transfer execution on the same parcel may invite enhanced scrutiny from court and revenue authorities.",
+            "This synthetic bundle is intended to generate a dense graph around one property, five parties, and multiple legal references.",
+        ],
+        signatories=[
+            "Seller 1: Kavya Nair",
+            "Buyer 1 / Seller 2: Rohan Das",
+            "Buyer 2 / Seller 3: Punit Arora",
+            "Buyer 3 / Seller 4: Leena Thomas",
+            "Final Buyer: Dev Malhotra",
+        ],
+    ),
+    SyntheticDocument(
+        filename="duplicate_title_injunction_01.pdf",
+        title="Duplicate Title Injunction Petition",
+        subtitle="Rival ownership pleading with forged-paper allegations and invalid legal references",
+        metadata=[
+            ("Document Type", "injunction_petition"),
+            ("Property ID", "PROP_KA_BLR_077"),
+            ("Survey Number", "Sy.No.45/7A"),
+            ("Court", "Bengaluru Urban Civil Court"),
+            ("Case ID", "CASE-2025-077"),
+            ("Primary Claimant", "Meera Iyer"),
+            ("Opposing Parties", "Dev Malhotra, Rohan Das"),
+            ("Filing Date", "08 March 2025"),
+        ],
+        recitals=[
+            "Meera Iyer filed objection before Bengaluru Urban Civil Court claiming that Dev Malhotra and Rohan Das cannot both own property PROP_KA_BLR_077.",
+            "The petition alleges forged tax clearance, duplicate registration presentation, and fabricated no-objection papers for survey parcel Sy.No.45/7A.",
+            "The pleading references Section 17 of Registration Act, Section 52 of Transfer of Property Act, and Section 999 of Urban Title Integrity Act.",
+        ],
+        clauses=[
+            "No transfer, mutation, lease, mortgage, or encumbrance should be permitted until the rival ownership claims are adjudicated.",
+            "The claimant states that duplicate title papers were produced after a suspicious rapid transfer stack involving the same property.",
+            "The court is requested to preserve all registrar logs, bank notices, and document bundles connected with PROP_KA_BLR_077.",
+            "This petition is intended to trigger ownership-conflict and invalid-reference signals in the LexNet demo graph.",
+        ],
+        signatories=[
+            "Petitioner: Meera Iyer",
+            "Counsel: Rahul Menon",
+            "Respondent 1: Dev Malhotra",
+            "Respondent 2: Rohan Das",
+        ],
+    ),
+    SyntheticDocument(
+        filename="benami_foreclosure_notice_01.pdf",
+        title="Benami Foreclosure and Tribunal Notice",
+        subtitle="Bank, registrar, tribunal, and proxy-holder narrative for high-risk graph enrichment",
+        metadata=[
+            ("Document Type", "foreclosure_notice"),
+            ("Property ID", "PROP_KA_BLR_077"),
+            ("Survey Number", "Sy.No.45/7A"),
+            ("Institution", "Metropolitan Bank Limited"),
+            ("Tribunal", "Debt Recovery Tribunal Bengaluru"),
+            ("Borrower", "Dev Malhotra"),
+            ("Proxy Holder", "Aarav Sen"),
+            ("Notice Date", "12 March 2025"),
+        ],
+        recitals=[
+            "Metropolitan Bank Limited issued foreclosure notice against Dev Malhotra regarding property PROP_KA_BLR_077 after payment defaults under the same title chain.",
+            "Dev Malhotra sold property PROP_KA_BLR_077 to proxy holder Aarav Sen before the mortgage review was completed.",
+            "Aarav Sen transferred property PROP_KA_BLR_077 to Nidhi Kapoor under a benami settlement while Debt Recovery Tribunal Bengaluru and Bengaluru Urban Civil Court considered competing claims.",
+        ],
+        clauses=[
+            "Registrar Office and municipal authorities were informed that the same survey parcel may have been used in a sham and fraudulent reassignment chain.",
+            "The notice states that forged disclosures, duplicate filings, and benami possession arrangements affected the enforceability of the mortgage records.",
+            "The bank relies on Section 52 of Transfer of Property Act and seeks restraint against any additional transfer pending tribunal review.",
+            "This synthetic notice is intended to create a dense cross-document graph of persons, organisations, courts, and the same disputed property.",
+        ],
+        signatories=[
+            "Issuing Bank: Metropolitan Bank Limited",
+            "Borrower: Dev Malhotra",
+            "Proxy Holder: Aarav Sen",
+            "Subsequent Holder: Nidhi Kapoor",
+        ],
+    ),
 )
 
 
@@ -298,12 +397,27 @@ def render_document(document: SyntheticDocument, output_path: Path) -> None:
     pdf.build(build_story(document))
 
 
-def generate_synthetic_documents(output_dir: str | Path = DEFAULT_OUTPUT_DIR) -> list[Path]:
+def generate_synthetic_documents(
+    output_dir: str | Path = DEFAULT_OUTPUT_DIR,
+    filenames: list[str] | None = None,
+) -> list[Path]:
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
 
+    selected_filenames = {filename.casefold() for filename in filenames} if filenames else None
+    selected_documents = [
+        document
+        for document in DOCUMENTS
+        if selected_filenames is None or document.filename.casefold() in selected_filenames
+    ]
+    if selected_filenames is not None:
+        found_filenames = {document.filename.casefold() for document in selected_documents}
+        missing_filenames = sorted(filename for filename in selected_filenames if filename not in found_filenames)
+        if missing_filenames:
+            raise ValueError(f"Unknown sample document filename(s): {', '.join(missing_filenames)}")
+
     generated_paths: list[Path] = []
-    for document in DOCUMENTS:
+    for document in selected_documents:
         output_path = destination / document.filename
         render_document(document, output_path)
         generated_paths.append(output_path)
@@ -318,9 +432,14 @@ def main() -> None:
         default=str(DEFAULT_OUTPUT_DIR),
         help="Directory where the sample PDF files will be written.",
     )
+    parser.add_argument(
+        "--filenames",
+        nargs="*",
+        help="Optional list of specific PDF filenames to generate without touching the rest.",
+    )
     args = parser.parse_args()
 
-    generated = generate_synthetic_documents(args.output_dir)
+    generated = generate_synthetic_documents(args.output_dir, args.filenames)
     for path in generated:
         print(f"Generated {path}")
 

@@ -102,8 +102,8 @@ export const FABRIC_TX_TIMEOUT_SEC = 30;
 // NLP Service
 // ---------------------------------------------------------------------------
 
-/** NLP trigger HTTP timeout in milliseconds (5 seconds) */
-export const NLP_TRIGGER_TIMEOUT_MS = 5_000;
+/** NLP trigger HTTP timeout in milliseconds (30 seconds) */
+export const NLP_TRIGGER_TIMEOUT_MS = 30_000;
 
 // ---------------------------------------------------------------------------
 // Neo4j

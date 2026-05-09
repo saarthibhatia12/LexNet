@@ -165,6 +165,7 @@ export interface NlpProcessResponse {
   triplesInserted: number;
   flags: string[];
   processingTimeMs: number;
+  error?: string;
 }
 
 // ---------------------------------------------------------------------------

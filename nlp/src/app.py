@@ -13,7 +13,7 @@ from flask import Flask, jsonify, request
 from pydantic import BaseModel, Field, ValidationError
 
 from src.config import Settings, get_settings
-from src.pipeline.conflict import compute_risk_score, load_conflict_model
+from src.pipeline.conflict import compute_risk_score, derive_graph_features, load_conflict_model
 from src.pipeline.graph_insert import (
     ensure_document_node,
     insert_entity_mentions,
@@ -68,23 +68,11 @@ def fetch_ipfs_pdf_bytes(ipfs_api_url: str, ipfs_cid: str, aes_key: str | None) 
         raise IPFSFetchError(str(error)) from error
 
 
-def build_graph_features(metadata: dict[str, Any], entities_count: int, triples_inserted: int) -> dict[str, Any]:
-    graph_features = metadata.get("graphFeatures", {})
-    if not isinstance(graph_features, dict):
-        graph_features = {}
-
-    return {
-        **graph_features,
-        "entitiesFound": entities_count,
-        "triplesInserted": triples_inserted,
-    }
-
-
 def elapsed_ms(started_at: float) -> int:
     return int((time.perf_counter() - started_at) * 1000)
 
 
-def failure_response(message: str, status_code: int, started_at: float) -> tuple[object, int]:
+def failure_response(message: str, started_at: float, status_code: int = 200) -> tuple[object, int]:
     LOGGER.warning("NLP processing failed: %s", message)
     return (
         jsonify(
@@ -159,9 +147,9 @@ def create_app(settings: Settings | None = None) -> Flask:
         try:
             payload = NLPProcessRequest.model_validate(request.get_json(silent=False))
         except ValidationError as error:
-            return failure_response(error.errors()[0]["msg"], 400, started_at)
+            return failure_response(error.errors()[0]["msg"], started_at, 400)
         except Exception:
-            return failure_response("Request body must be valid JSON.", 400, started_at)
+            return failure_response("Request body must be valid JSON.", started_at, 400)
 
         temp_pdf_path: Path | None = None
         try:
@@ -183,7 +171,13 @@ def create_app(settings: Settings | None = None) -> Flask:
                 mention_count = insert_entity_mentions(entities, payload.doc_hash)
                 if mention_count == 0:
                     ensure_document_node(payload.doc_hash)
-            graph_features = build_graph_features(payload.metadata, len(entities), triples_inserted)
+            graph_features = derive_graph_features(
+                payload.metadata,
+                cleaned_text,
+                entities,
+                triples,
+                triples_inserted,
+            )
             risk_result = compute_risk_score(payload.doc_hash, payload.metadata, graph_features)
             persist_risk_assessment(payload.doc_hash, risk_result)
 
@@ -201,12 +195,12 @@ def create_app(settings: Settings | None = None) -> Flask:
                 200,
             )
         except IPFSFetchError as error:
-            return failure_response(str(error), 502, started_at)
+            return failure_response(str(error), started_at)
         except OCRError as error:
-            return failure_response(str(error), 422, started_at)
+            return failure_response(str(error), started_at)
         except Exception:
             LOGGER.exception("Unexpected NLP processing error for docHash=%s", payload.doc_hash)
-            return failure_response("NLP processing failed.", 500, started_at)
+            return failure_response("NLP processing failed.", started_at)
         finally:
             if temp_pdf_path is not None:
                 temp_pdf_path.unlink(missing_ok=True)

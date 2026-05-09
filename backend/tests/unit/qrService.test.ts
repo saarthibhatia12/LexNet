@@ -294,6 +294,68 @@ describe('nlpTriggerService', () => {
       expect(result).toBeNull();
     });
 
+    it('should return structured failed payloads from the NLP service', async () => {
+      const mockResponse = {
+        status: 'failed' as const,
+        riskScore: 0,
+        entitiesFound: 0,
+        triplesInserted: 0,
+        flags: [],
+        processingTimeMs: 4744,
+        error: 'NLP processing failed.',
+      };
+
+      globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue({
+        ok: true,
+        status: 200,
+        text: async () => JSON.stringify(mockResponse),
+      } as unknown as globalThis.Response);
+
+      const result = await sendNlpRequest(
+        `${TEST_NLP_SERVICE_URL}/nlp/process`,
+        {
+          docHash: VALID_HASH,
+          ipfsCID: 'QmTestCID',
+          metadata: { docType: 'sale_deed', ownerId: 'owner1' },
+        }
+      );
+
+      expect(result).not.toBeNull();
+      expect(result!.status).toBe('failed');
+      expect(result!.error).toBe('NLP processing failed.');
+    });
+
+    it('should parse structured failed payloads even on non-2xx responses', async () => {
+      const mockResponse = {
+        status: 'failed' as const,
+        riskScore: 0,
+        entitiesFound: 0,
+        triplesInserted: 0,
+        flags: [],
+        processingTimeMs: 4744,
+        error: 'NLP processing failed.',
+      };
+
+      globalThis.fetch = jest.fn<typeof fetch>().mockResolvedValue({
+        ok: false,
+        status: 500,
+        text: async () => JSON.stringify(mockResponse),
+      } as unknown as globalThis.Response);
+
+      const result = await sendNlpRequest(
+        `${TEST_NLP_SERVICE_URL}/nlp/process`,
+        {
+          docHash: VALID_HASH,
+          ipfsCID: 'QmTestCID',
+          metadata: { docType: 'sale_deed', ownerId: 'owner1' },
+        }
+      );
+
+      expect(result).not.toBeNull();
+      expect(result!.status).toBe('failed');
+      expect(result!.processingTimeMs).toBe(4744);
+    });
+
     it('should return null on network failure (fetch throws)', async () => {
       globalThis.fetch = jest
         .fn<typeof fetch>()

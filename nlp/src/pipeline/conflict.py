@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 import logging
 import math
 import pickle
@@ -12,7 +13,9 @@ from pathlib import Path
 from typing import Any
 
 from src.config import get_settings
+from src.models.entity import Entity
 from src.models.risk import RiskResult
+from src.models.triple import Triple
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +32,39 @@ FEATURE_COLUMNS = [
 
 DEFAULT_LOW_RISK_SCORE = 10.0
 MAX_MONETARY_VALUE = 10_000_000.0
+TRANSFER_CUE_PATTERN = re.compile(
+    r"\b(?:sold|transferred|conveyed|gifted|leased|assigned|reassigned|mortgaged)\b",
+    re.IGNORECASE,
+)
+DISPUTE_CUE_PATTERN = re.compile(
+    r"\b(?:dispute|objection|rival|competing|conflict|litigation|injunction|"
+    r"claim(?:ed|s)?|restrain|stay|petition|suit)\b",
+    re.IGNORECASE,
+)
+COURT_CUE_PATTERN = re.compile(
+    r"\b(?:court|tribunal|judge|bench|injunction|case\s+id|civil\s+suit|drt)\b",
+    re.IGNORECASE,
+)
+ANOMALY_CUE_PATTERN = re.compile(
+    r"\b(?:forged|fake|fraudulent|fabricated|duplicate|invalid|benami|sham|bogus|"
+    r"without\s+consent|without\s+noc|unregistered)\b",
+    re.IGNORECASE,
+)
+CASE_REFERENCE_PATTERN = re.compile(
+    r"\b(?:CASE|SUIT|PETITION|APPEAL)[-_:/]?[A-Z0-9/_-]+\b",
+    re.IGNORECASE,
+)
+KNOWN_LEGAL_ACT_NAMES = (
+    "registration act",
+    "transfer of property act",
+    "indian stamp act",
+    "specific relief act",
+    "civil procedure code",
+    "cpc",
+    "code of civil procedure",
+    "succession act",
+    "evidence act",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +102,64 @@ def compute_risk_score(doc_hash: str, doc_metadata: dict[str, Any], graph_featur
     return RiskResult(score=score, flags=flags, explanation=explanation)
 
 
+def derive_graph_features(
+    doc_metadata: dict[str, Any],
+    cleaned_text: str,
+    entities: list[Entity],
+    triples: list[Triple],
+    triples_inserted: int,
+) -> dict[str, Any]:
+    graph_features = doc_metadata.get("graphFeatures", {})
+    if not isinstance(graph_features, dict):
+        graph_features = {}
+
+    ownership_map: dict[str, set[str]] = defaultdict(set)
+    for triple in triples:
+        if triple.predicate != "OWNS":
+            continue
+        property_key = _normalize_graph_value(triple.object_)
+        owner_key = _normalize_graph_value(triple.subject)
+        if property_key and owner_key:
+            ownership_map[property_key].add(owner_key)
+
+    max_owners_for_property = max((len(owners) for owners in ownership_map.values()), default=0)
+    duplicate_owner_edges = sum(max(len(owners) - 1, 0) for owners in ownership_map.values())
+    transfer_mentions = len(TRANSFER_CUE_PATTERN.findall(cleaned_text))
+    dispute_detected = DISPUTE_CUE_PATTERN.search(cleaned_text) is not None
+    court_detected = _has_court_involvement(doc_metadata, cleaned_text, entities)
+    anomaly_mentions = len(ANOMALY_CUE_PATTERN.findall(cleaned_text))
+    invalid_reference_count = _count_invalid_legal_references(entities)
+    if anomaly_mentions > 0 and invalid_reference_count == 0:
+        invalid_reference_count = 1
+
+    derived_features: dict[str, Any] = {
+        "entitiesFound": len(entities),
+        "triplesInserted": triples_inserted,
+        "num_previous_transfers": max(max_owners_for_property - 1, max(transfer_mentions - 1, 0)),
+        "owner_change_frequency": max(max_owners_for_property - 1, transfer_mentions),
+        "num_owners_last_year": max_owners_for_property,
+        "num_linked_disputes": max(
+            len(CASE_REFERENCE_PATTERN.findall(cleaned_text)),
+            1 if dispute_detected else 0,
+        ),
+        "has_court_involvement": court_detected,
+        "invalid_reference_count": invalid_reference_count,
+        "owner_mismatch": duplicate_owner_edges > 0 and (dispute_detected or court_detected or anomaly_mentions > 0),
+        "conflicting_owner_count": duplicate_owner_edges,
+        "duplicate_owner_edges": duplicate_owner_edges,
+    }
+
+    highest_monetary_value = _highest_monetary_value(entities)
+    if highest_monetary_value > 0:
+        derived_features["monetaryValue"] = highest_monetary_value
+
+    resolved_features = dict(graph_features)
+    for key, value in derived_features.items():
+        resolved_features.setdefault(key, value)
+
+    return resolved_features
+
+
 def extract_features(doc_metadata: dict[str, Any], graph_features: dict[str, Any]) -> ConflictFeatures:
     doc_age_days = _doc_age_days(doc_metadata)
     monetary_value = _first_number(
@@ -74,6 +168,11 @@ def extract_features(doc_metadata: dict[str, Any], graph_features: dict[str, Any
         "monetary_value",
         "amount",
         "considerationAmount",
+    ) or _first_number(
+        graph_features,
+        "monetaryValue",
+        "monetary_value",
+        "highestMonetaryValue",
     )
     monetary_value_normalized = min(max(monetary_value / MAX_MONETARY_VALUE, 0.0), 1.0)
 
@@ -247,6 +346,56 @@ def _first_bool(mapping: dict[str, Any], *keys: str) -> bool:
     if value is None:
         return False
     return str(value).strip().casefold() in {"1", "true", "yes", "y"}
+
+
+def _normalize_graph_value(value: str) -> str:
+    return " ".join(value.split()).strip().casefold()
+
+
+def _has_court_involvement(doc_metadata: dict[str, Any], cleaned_text: str, entities: list[Entity]) -> bool:
+    if COURT_CUE_PATTERN.search(cleaned_text):
+        return True
+
+    metadata_values = [str(value) for value in doc_metadata.values() if isinstance(value, (str, int, float))]
+    if any(COURT_CUE_PATTERN.search(value) for value in metadata_values):
+        return True
+
+    return any(
+        "court" in entity.text.casefold() or "tribunal" in entity.text.casefold()
+        for entity in entities
+        if entity.label in {"JURISDICTION", "ORGANISATION"}
+    )
+
+
+def _count_invalid_legal_references(entities: list[Entity]) -> int:
+    invalid_references = 0
+    for entity in entities:
+        if entity.label != "LEGAL_SECTION":
+            continue
+
+        normalized_text = entity.text.casefold()
+        if "section" not in normalized_text:
+            continue
+
+        if " of " not in normalized_text:
+            invalid_references += 1
+            continue
+
+        if not any(act_name in normalized_text for act_name in KNOWN_LEGAL_ACT_NAMES):
+            invalid_references += 1
+
+    return invalid_references
+
+
+def _highest_monetary_value(entities: list[Entity]) -> float:
+    highest_value = 0.0
+    for entity in entities:
+        if entity.label != "MONETARY_VALUE":
+            continue
+
+        highest_value = max(highest_value, _first_number({"value": entity.text}, "value"))
+
+    return highest_value
 
 
 def _is_false(value: Any) -> bool:

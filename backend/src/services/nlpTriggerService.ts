@@ -10,13 +10,72 @@
 //
 // Endpoint: POST {NLP_SERVICE_URL}/nlp/process
 // Body: { docHash, ipfsCID, metadata: { docType, ownerId } }
-// Timeout: 5 seconds
+// Timeout: 30 seconds
 // ============================================================================
 
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import type { NlpProcessRequest, NlpProcessResponse } from '../types/index.js';
 import { NLP_TRIGGER_TIMEOUT_MS } from '../utils/constants.js';
+import { z } from 'zod';
+
+const nlpProcessResponseSchema = z.object({
+  status: z.enum(['completed', 'failed']),
+  riskScore: z.number(),
+  entitiesFound: z.number().int().nonnegative(),
+  triplesInserted: z.number().int().nonnegative(),
+  flags: z.array(z.string()),
+  processingTimeMs: z.number().int().nonnegative(),
+  error: z.string().min(1).optional(),
+});
+
+function parseNlpProcessResponse(payloadText: string): NlpProcessResponse | null {
+  if (!payloadText.trim()) {
+    return null;
+  }
+
+  try {
+    return nlpProcessResponseSchema.parse(JSON.parse(payloadText)) as NlpProcessResponse;
+  } catch {
+    return null;
+  }
+}
+
+function logNlpProcessResponse(
+  docHash: string,
+  result: NlpProcessResponse,
+  httpStatus: number
+): void {
+  if (result.status === 'failed') {
+    logger.warn('NLP processing reported failure', {
+      docHash,
+      httpStatus,
+      riskScore: result.riskScore,
+      entitiesFound: result.entitiesFound,
+      triplesInserted: result.triplesInserted,
+      processingTimeMs: result.processingTimeMs,
+      error: result.error ?? 'NLP pipeline returned failed status',
+    });
+    return;
+  }
+
+  logger.info('NLP processing completed', {
+    docHash,
+    httpStatus,
+    status: result.status,
+    riskScore: result.riskScore,
+    entitiesFound: result.entitiesFound,
+    triplesInserted: result.triplesInserted,
+    processingTimeMs: result.processingTimeMs,
+  });
+
+  if (result.flags.length > 0) {
+    logger.warn('NLP flagged document', {
+      docHash,
+      flags: result.flags,
+    });
+  }
+}
 
 /**
  * Trigger the NLP pipeline for a newly registered document.
@@ -104,35 +163,34 @@ export async function sendNlpRequest(
       signal: controller.signal,
     });
 
+    const responseText = await response.text().catch(() => '');
+    const parsedResult = parseNlpProcessResponse(responseText);
+
     if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error');
+      if (parsedResult) {
+        logNlpProcessResponse(body.docHash, parsedResult, response.status);
+        return parsedResult;
+      }
+
       logger.warn('NLP service returned error', {
         docHash: body.docHash,
         status: response.status,
-        error: errorText.substring(0, 200),
+        error: responseText.substring(0, 200) || 'Unknown error',
       });
       return null;
     }
 
-    const result = (await response.json()) as NlpProcessResponse;
-
-    logger.info('NLP processing completed', {
-      docHash: body.docHash,
-      status: result.status,
-      riskScore: result.riskScore,
-      entitiesFound: result.entitiesFound,
-      triplesInserted: result.triplesInserted,
-      processingTimeMs: result.processingTimeMs,
-    });
-
-    if (result.flags && result.flags.length > 0) {
-      logger.warn('NLP flagged document', {
+    if (!parsedResult) {
+      logger.warn('NLP service returned invalid response payload', {
         docHash: body.docHash,
-        flags: result.flags,
+        status: response.status,
+        error: responseText.substring(0, 200) || 'Empty response body',
       });
+      return null;
     }
 
-    return result;
+    logNlpProcessResponse(body.docHash, parsedResult, response.status);
+    return parsedResult;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown NLP error';
 
