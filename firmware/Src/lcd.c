@@ -1,14 +1,9 @@
 /**
  * @file    lcd.c
- * @brief   HD44780 16x2 LCD driver over I2C PCF8574 adapter.
- * @details Implements 4-bit mode HD44780 communication through the PCF8574
- *          I2C I/O expander. Each write to the LCD requires two I2C
- *          transactions (high nibble, low nibble), each with an enable pulse.
- *
- * Timing requirements (HD44780 datasheet):
- *   - Enable pulse width:  ≥450ns (we use HAL delays, far exceeding this)
- *   - Clear/Home commands: ≥1.52ms execution time
- *   - Other commands/data: ≥37µs execution time
+ * @brief   ILI9341 2.8" TFT SPI display driver implementation.
+ * @details Full-color 240x320 display via SPI1 at 18MHz. Renders text using
+ *          an embedded 5x7 pixel font scaled 2x (12x16 effective char size).
+ *          Provides the same API as the old HD44780 driver so main.c is unchanged.
  */
 
 #include "lcd.h"
@@ -16,168 +11,362 @@
 #include <string.h>
 
 /* ========================================================================== */
+/*                           5x7 ASCII FONT                                   */
+/* ========================================================================== */
+/*
+ * Standard 5x7 pixel font, ASCII 32-126 (95 printable characters).
+ * Each character is 5 bytes; each byte is a column, LSB = top pixel.
+ * Total: 95 × 5 = 475 bytes in Flash.
+ */
+static const uint8_t font5x7[][5] = {
+    {0x00,0x00,0x00,0x00,0x00}, /*   (32) */
+    {0x00,0x00,0x5F,0x00,0x00}, /* ! (33) */
+    {0x00,0x07,0x00,0x07,0x00}, /* " (34) */
+    {0x14,0x7F,0x14,0x7F,0x14}, /* # (35) */
+    {0x24,0x2A,0x7F,0x2A,0x12}, /* $ (36) */
+    {0x23,0x13,0x08,0x64,0x62}, /* % (37) */
+    {0x36,0x49,0x55,0x22,0x50}, /* & (38) */
+    {0x00,0x05,0x03,0x00,0x00}, /* ' (39) */
+    {0x00,0x1C,0x22,0x41,0x00}, /* ( (40) */
+    {0x00,0x41,0x22,0x1C,0x00}, /* ) (41) */
+    {0x14,0x08,0x3E,0x08,0x14}, /* * (42) */
+    {0x08,0x08,0x3E,0x08,0x08}, /* + (43) */
+    {0x00,0x50,0x30,0x00,0x00}, /* , (44) */
+    {0x08,0x08,0x08,0x08,0x08}, /* - (45) */
+    {0x00,0x60,0x60,0x00,0x00}, /* . (46) */
+    {0x20,0x10,0x08,0x04,0x02}, /* / (47) */
+    {0x3E,0x51,0x49,0x45,0x3E}, /* 0 (48) */
+    {0x00,0x42,0x7F,0x40,0x00}, /* 1 (49) */
+    {0x42,0x61,0x51,0x49,0x46}, /* 2 (50) */
+    {0x21,0x41,0x45,0x4B,0x31}, /* 3 (51) */
+    {0x18,0x14,0x12,0x7F,0x10}, /* 4 (52) */
+    {0x27,0x45,0x45,0x45,0x39}, /* 5 (53) */
+    {0x3C,0x4A,0x49,0x49,0x30}, /* 6 (54) */
+    {0x01,0x71,0x09,0x05,0x03}, /* 7 (55) */
+    {0x36,0x49,0x49,0x49,0x36}, /* 8 (56) */
+    {0x06,0x49,0x49,0x29,0x1E}, /* 9 (57) */
+    {0x00,0x36,0x36,0x00,0x00}, /* : (58) */
+    {0x00,0x56,0x36,0x00,0x00}, /* ; (59) */
+    {0x08,0x14,0x22,0x41,0x00}, /* < (60) */
+    {0x14,0x14,0x14,0x14,0x14}, /* = (61) */
+    {0x00,0x41,0x22,0x14,0x08}, /* > (62) */
+    {0x02,0x01,0x51,0x09,0x06}, /* ? (63) */
+    {0x32,0x49,0x79,0x41,0x3E}, /* @ (64) */
+    {0x7E,0x11,0x11,0x11,0x7E}, /* A (65) */
+    {0x7F,0x49,0x49,0x49,0x36}, /* B (66) */
+    {0x3E,0x41,0x41,0x41,0x22}, /* C (67) */
+    {0x7F,0x41,0x41,0x22,0x1C}, /* D (68) */
+    {0x7F,0x49,0x49,0x49,0x41}, /* E (69) */
+    {0x7F,0x09,0x09,0x09,0x01}, /* F (70) */
+    {0x3E,0x41,0x49,0x49,0x7A}, /* G (71) */
+    {0x7F,0x08,0x08,0x08,0x7F}, /* H (72) */
+    {0x00,0x41,0x7F,0x41,0x00}, /* I (73) */
+    {0x20,0x40,0x41,0x3F,0x01}, /* J (74) */
+    {0x7F,0x08,0x14,0x22,0x41}, /* K (75) */
+    {0x7F,0x40,0x40,0x40,0x40}, /* L (76) */
+    {0x7F,0x02,0x0C,0x02,0x7F}, /* M (77) */
+    {0x7F,0x04,0x08,0x10,0x7F}, /* N (78) */
+    {0x3E,0x41,0x41,0x41,0x3E}, /* O (79) */
+    {0x7F,0x09,0x09,0x09,0x06}, /* P (80) */
+    {0x3E,0x41,0x51,0x21,0x5E}, /* Q (81) */
+    {0x7F,0x09,0x19,0x29,0x46}, /* R (82) */
+    {0x46,0x49,0x49,0x49,0x31}, /* S (83) */
+    {0x01,0x01,0x7F,0x01,0x01}, /* T (84) */
+    {0x3F,0x40,0x40,0x40,0x3F}, /* U (85) */
+    {0x1F,0x20,0x40,0x20,0x1F}, /* V (86) */
+    {0x3F,0x40,0x38,0x40,0x3F}, /* W (87) */
+    {0x63,0x14,0x08,0x14,0x63}, /* X (88) */
+    {0x07,0x08,0x70,0x08,0x07}, /* Y (89) */
+    {0x61,0x51,0x49,0x45,0x43}, /* Z (90) */
+    {0x00,0x7F,0x41,0x41,0x00}, /* [ (91) */
+    {0x02,0x04,0x08,0x10,0x20}, /* \ (92) */
+    {0x00,0x41,0x41,0x7F,0x00}, /* ] (93) */
+    {0x04,0x02,0x01,0x02,0x04}, /* ^ (94) */
+    {0x40,0x40,0x40,0x40,0x40}, /* _ (95) */
+    {0x00,0x01,0x02,0x04,0x00}, /* ` (96) */
+    {0x20,0x54,0x54,0x54,0x78}, /* a (97) */
+    {0x7F,0x48,0x44,0x44,0x38}, /* b (98) */
+    {0x38,0x44,0x44,0x44,0x20}, /* c (99) */
+    {0x38,0x44,0x44,0x48,0x7F}, /* d (100)*/
+    {0x38,0x54,0x54,0x54,0x18}, /* e (101)*/
+    {0x08,0x7E,0x09,0x01,0x02}, /* f (102)*/
+    {0x0C,0x52,0x52,0x52,0x3E}, /* g (103)*/
+    {0x7F,0x08,0x04,0x04,0x78}, /* h (104)*/
+    {0x00,0x44,0x7D,0x40,0x00}, /* i (105)*/
+    {0x20,0x40,0x44,0x3D,0x00}, /* j (106)*/
+    {0x7F,0x10,0x28,0x44,0x00}, /* k (107)*/
+    {0x00,0x41,0x7F,0x40,0x00}, /* l (108)*/
+    {0x7C,0x04,0x18,0x04,0x78}, /* m (109)*/
+    {0x7C,0x08,0x04,0x04,0x78}, /* n (110)*/
+    {0x38,0x44,0x44,0x44,0x38}, /* o (111)*/
+    {0x7C,0x14,0x14,0x14,0x08}, /* p (112)*/
+    {0x08,0x14,0x14,0x18,0x7C}, /* q (113)*/
+    {0x7C,0x08,0x04,0x04,0x08}, /* r (114)*/
+    {0x48,0x54,0x54,0x54,0x20}, /* s (115)*/
+    {0x04,0x3F,0x44,0x40,0x20}, /* t (116)*/
+    {0x3C,0x40,0x40,0x20,0x7C}, /* u (117)*/
+    {0x1C,0x20,0x40,0x20,0x1C}, /* v (118)*/
+    {0x3C,0x40,0x30,0x40,0x3C}, /* w (119)*/
+    {0x44,0x28,0x10,0x28,0x44}, /* x (120)*/
+    {0x0C,0x50,0x50,0x50,0x3C}, /* y (121)*/
+    {0x44,0x64,0x54,0x4C,0x44}, /* z (122)*/
+    {0x00,0x08,0x36,0x41,0x00}, /* { (123)*/
+    {0x00,0x00,0x7F,0x00,0x00}, /* | (124)*/
+    {0x00,0x41,0x36,0x08,0x00}, /* } (125)*/
+    {0x10,0x08,0x08,0x10,0x08}, /* ~ (126)*/
+};
+
+/* ========================================================================== */
 /*                           PRIVATE STATE                                    */
 /* ========================================================================== */
 
-/** Current backlight state bit (OR'd into every I2C write) */
-static uint8_t lcd_backlight_state = LCD_BIT_BL;
+static uint16_t text_fg = COLOR_WHITE;
+static uint16_t text_bg = COLOR_DARK_BG;
+static uint8_t  cursor_row = 0;
+static uint8_t  cursor_col = 0;
 
 /* ========================================================================== */
-/*                       PRIVATE I2C HELPERS                                  */
+/*                       PRIVATE SPI HELPERS                                  */
 /* ========================================================================== */
 
-/**
- * @brief  Write a single byte to the PCF8574 via I2C.
- * @param  data  The byte to write (P0–P7 pin states).
- * @return HAL_OK on success.
- */
-static HAL_StatusTypeDef lcd_i2c_write(uint8_t data)
+/** @brief Send a single command byte (DC=0). */
+static void lcd_write_cmd(uint8_t cmd)
 {
-    return HAL_I2C_Master_Transmit(&LCD_I2C, LCD_ADDR_HAL, &data, 1, UART_TIMEOUT);
+    TFT_DC_CMD();
+    TFT_CS_LOW();
+    HAL_SPI_Transmit(&LCD_SPI, &cmd, 1, HAL_MAX_DELAY);
+    TFT_CS_HIGH();
 }
 
-/**
- * @brief  Pulse the Enable (EN) pin high then low to latch data.
- * @param  data  Current PCF8574 output byte (data nibble + RS + BL).
- *
- * The EN pulse sequence:
- *   1. Set EN high (data | EN) — latches data on rising edge
- *   2. Brief delay for HD44780 to read
- *   3. Set EN low  (data & ~EN) — falling edge triggers execution
- *   4. Brief delay for command execution
- */
-static void lcd_pulse_enable(uint8_t data)
+/** @brief Send a single data byte (DC=1). */
+static void lcd_write_data(uint8_t data)
 {
-    uint8_t en_high = data | LCD_BIT_EN;
-    uint8_t en_low  = data & (uint8_t)(~LCD_BIT_EN);
-
-    lcd_i2c_write(en_high);
-    HAL_Delay(1);  /* EN pulse width — HD44780 needs ≥450ns, 1ms is safe */
-    lcd_i2c_write(en_low);
-    HAL_Delay(1);  /* Data execution time — most commands need ≥37µs */
+    TFT_DC_DATA();
+    TFT_CS_LOW();
+    HAL_SPI_Transmit(&LCD_SPI, &data, 1, HAL_MAX_DELAY);
+    TFT_CS_HIGH();
 }
 
-/**
- * @brief  Send a 4-bit nibble to the LCD.
- * @param  nibble  Upper 4 bits contain the data to send (D7–D4 in bits 7–4).
- * @param  rs      Register select: 0 = command, LCD_BIT_RS = data.
- */
-static void lcd_send_nibble(uint8_t nibble, uint8_t rs)
+/** @brief Send multiple data bytes (DC=1). */
+static void lcd_write_data_multi(const uint8_t *data, uint16_t len)
 {
-    /* PCF8574 output: D7-D4 in P7-P4, RS in P0, BL in P3 */
-    uint8_t data = (nibble & 0xF0) | rs | lcd_backlight_state;
-    lcd_pulse_enable(data);
+    TFT_DC_DATA();
+    TFT_CS_LOW();
+    HAL_SPI_Transmit(&LCD_SPI, (uint8_t *)data, len, HAL_MAX_DELAY);
+    TFT_CS_HIGH();
 }
 
-/**
- * @brief  Send a full byte (as two nibbles) to the LCD.
- * @param  byte  The 8-bit value to send.
- * @param  rs    Register select: 0 = command, LCD_BIT_RS = data.
- */
-static void lcd_send_byte(uint8_t byte, uint8_t rs)
+/** @brief Set the active drawing window (column and page range). */
+static void lcd_set_window(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    /* Send high nibble first, then low nibble */
-    lcd_send_nibble(byte & 0xF0, rs);
-    lcd_send_nibble((uint8_t)((byte << 4) & 0xF0), rs);
-}
+    uint8_t data[4];
 
-/**
- * @brief  Send a command byte to the LCD (RS = 0).
- * @param  cmd  HD44780 command byte.
- */
-static void lcd_send_command(uint8_t cmd)
-{
-    lcd_send_byte(cmd, 0);
-}
+    lcd_write_cmd(ILI9341_CASET);
+    data[0] = (uint8_t)(x0 >> 8); data[1] = (uint8_t)(x0 & 0xFF);
+    data[2] = (uint8_t)(x1 >> 8); data[3] = (uint8_t)(x1 & 0xFF);
+    lcd_write_data_multi(data, 4);
 
-/**
- * @brief  Send a data byte (character) to the LCD (RS = 1).
- * @param  data  ASCII character to display.
- */
-static void lcd_send_data(uint8_t data)
-{
-    lcd_send_byte(data, LCD_BIT_RS);
+    lcd_write_cmd(ILI9341_PASET);
+    data[0] = (uint8_t)(y0 >> 8); data[1] = (uint8_t)(y0 & 0xFF);
+    data[2] = (uint8_t)(y1 >> 8); data[3] = (uint8_t)(y1 & 0xFF);
+    lcd_write_data_multi(data, 4);
+
+    lcd_write_cmd(ILI9341_RAMWR);
 }
 
 /* ========================================================================== */
-/*                           PUBLIC API                                       */
+/*                          PUBLIC API                                        */
 /* ========================================================================== */
 
-/**
- * @brief  Initialise the 16x2 LCD via I2C PCF8574.
- *
- * Follows the HD44780 datasheet initialisation sequence for 4-bit mode:
- *   1. Wait >40ms after Vcc rises to 4.5V (power-on delay)
- *   2. Send Function Set (0x30) three times for reliable mode entry
- *   3. Switch to 4-bit mode (0x20)
- *   4. Configure display parameters
- *   5. Clear and set entry mode
- */
 void lcd_init(void)
 {
-    /* Power-on delay — HD44780 needs >40ms after Vcc reaches 4.5V */
+    /* Hardware reset */
+    TFT_RST_HIGH();
+    HAL_Delay(5);
+    TFT_RST_LOW();
+    HAL_Delay(20);
+    TFT_RST_HIGH();
+    HAL_Delay(150);
+
+    /* Software reset */
+    lcd_write_cmd(ILI9341_SWRESET);
+    HAL_Delay(150);
+
+    /* Power Control A */
+    lcd_write_cmd(0xCB);
+    { uint8_t d[] = {0x39,0x2C,0x00,0x34,0x02}; lcd_write_data_multi(d, 5); }
+
+    /* Power Control B */
+    lcd_write_cmd(0xCF);
+    { uint8_t d[] = {0x00,0xC1,0x30}; lcd_write_data_multi(d, 3); }
+
+    /* Driver Timing Control A */
+    lcd_write_cmd(0xE8);
+    { uint8_t d[] = {0x85,0x00,0x78}; lcd_write_data_multi(d, 3); }
+
+    /* Driver Timing Control B */
+    lcd_write_cmd(0xEA);
+    { uint8_t d[] = {0x00,0x00}; lcd_write_data_multi(d, 2); }
+
+    /* Power On Sequence Control */
+    lcd_write_cmd(0xED);
+    { uint8_t d[] = {0x64,0x03,0x12,0x81}; lcd_write_data_multi(d, 4); }
+
+    /* Pump Ratio Control */
+    lcd_write_cmd(0xF7);
+    lcd_write_data(0x20);
+
+    /* Power Control 1 */
+    lcd_write_cmd(0xC0);
+    lcd_write_data(0x23);
+
+    /* Power Control 2 */
+    lcd_write_cmd(0xC1);
+    lcd_write_data(0x10);
+
+    /* VCOM Control 1 */
+    lcd_write_cmd(0xC5);
+    { uint8_t d[] = {0x3E,0x28}; lcd_write_data_multi(d, 2); }
+
+    /* VCOM Control 2 */
+    lcd_write_cmd(0xC7);
+    lcd_write_data(0x86);
+
+    /* Memory Access Control — portrait mode, RGB color order */
+    lcd_write_cmd(ILI9341_MADCTL);
+    lcd_write_data(0x48);
+
+    /* Pixel Format — 16-bit RGB565 */
+    lcd_write_cmd(ILI9341_PIXFMT);
+    lcd_write_data(0x55);
+
+    /* Frame Rate Control */
+    lcd_write_cmd(0xB1);
+    { uint8_t d[] = {0x00,0x18}; lcd_write_data_multi(d, 2); }
+
+    /* Display Function Control */
+    lcd_write_cmd(0xB6);
+    { uint8_t d[] = {0x08,0x82,0x27}; lcd_write_data_multi(d, 3); }
+
+    /* Enable 3G — disable */
+    lcd_write_cmd(0xF2);
+    lcd_write_data(0x00);
+
+    /* Gamma Set */
+    lcd_write_cmd(0x26);
+    lcd_write_data(0x01);
+
+    /* Positive Gamma Correction */
+    lcd_write_cmd(0xE0);
+    { uint8_t d[] = {0x0F,0x31,0x2B,0x0C,0x0E,0x08,0x4E,0xF1,
+                     0x37,0x07,0x10,0x03,0x0E,0x09,0x00};
+      lcd_write_data_multi(d, 15); }
+
+    /* Negative Gamma Correction */
+    lcd_write_cmd(0xE1);
+    { uint8_t d[] = {0x00,0x0E,0x14,0x03,0x11,0x07,0x31,0xC1,
+                     0x48,0x08,0x0F,0x0C,0x31,0x36,0x0F};
+      lcd_write_data_multi(d, 15); }
+
+    /* Sleep Out */
+    lcd_write_cmd(ILI9341_SLPOUT);
+    HAL_Delay(120);
+
+    /* Display On */
+    lcd_write_cmd(ILI9341_DISPON);
     HAL_Delay(50);
 
-    /* Initialise backlight ON */
-    lcd_backlight_state = LCD_BIT_BL;
-    lcd_i2c_write(lcd_backlight_state);
-    HAL_Delay(10);
+    /* Clear to background color */
+    lcd_clear();
+}
 
-    /*
-     * HD44780 initialisation sequence (datasheet Figure 24):
-     * The LCD starts in an unknown state, so we send Function Set (8-bit)
-     * three times to force it into a known 8-bit mode before switching to 4-bit.
-     */
+void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color)
+{
+    uint8_t row_buf[TFT_WIDTH * 2];  /* max one row of pixels (480 bytes) */
+    uint16_t row_pixels;
+    uint16_t i;
 
-    /* Step 1: Function Set — 8-bit mode attempt #1 */
-    lcd_send_nibble(0x30, 0);
-    HAL_Delay(5);  /* Wait >4.1ms */
+    if (x >= TFT_WIDTH || y >= TFT_HEIGHT) return;
+    if (x + w > TFT_WIDTH)  w = TFT_WIDTH - x;
+    if (y + h > TFT_HEIGHT) h = TFT_HEIGHT - y;
 
-    /* Step 2: Function Set — 8-bit mode attempt #2 */
-    lcd_send_nibble(0x30, 0);
-    HAL_Delay(1);  /* Wait >100µs */
+    /* Pre-fill one row of color data (big-endian RGB565) */
+    row_pixels = w;
+    for (i = 0; i < row_pixels; i++) {
+        row_buf[i * 2]     = (uint8_t)(color >> 8);
+        row_buf[i * 2 + 1] = (uint8_t)(color & 0xFF);
+    }
 
-    /* Step 3: Function Set — 8-bit mode attempt #3 */
-    lcd_send_nibble(0x30, 0);
-    HAL_Delay(1);
+    lcd_set_window(x, y, x + w - 1, y + h - 1);
 
-    /* Step 4: Switch to 4-bit mode */
-    lcd_send_nibble(0x20, 0);
-    HAL_Delay(1);
-
-    /* Now in 4-bit mode — can send full bytes as two nibbles */
-
-    /* Function Set: 4-bit, 2-line, 5x8 font */
-    lcd_send_command(LCD_CMD_FUNCTION_SET_4BIT);
-    HAL_Delay(1);
-
-    /* Display ON, cursor OFF, blink OFF */
-    lcd_send_command(LCD_CMD_DISPLAY_ON);
-    HAL_Delay(1);
-
-    /* Clear display */
-    lcd_send_command(LCD_CMD_CLEAR);
-    HAL_Delay(2);  /* Clear command needs ≥1.52ms */
-
-    /* Entry mode: increment cursor, no display shift */
-    lcd_send_command(LCD_CMD_ENTRY_MODE);
-    HAL_Delay(1);
+    TFT_DC_DATA();
+    TFT_CS_LOW();
+    for (i = 0; i < h; i++) {
+        HAL_SPI_Transmit(&LCD_SPI, row_buf, row_pixels * 2, HAL_MAX_DELAY);
+    }
+    TFT_CS_HIGH();
 }
 
 void lcd_clear(void)
 {
-    lcd_send_command(LCD_CMD_CLEAR);
-    HAL_Delay(2);  /* Clear takes ≥1.52ms */
+    lcd_fill_rect(0, 0, TFT_WIDTH, TFT_HEIGHT, text_bg);
+    cursor_row = 0;
+    cursor_col = 0;
 }
 
 void lcd_set_cursor(uint8_t row, uint8_t col)
 {
-    /* Clamp inputs */
-    if (row > 1) row = 1;
-    if (col > (LCD_COLS - 1)) col = LCD_COLS - 1;
+    if (row >= TOTAL_LINES) row = TOTAL_LINES - 1;
+    if (col >= CHARS_PER_LINE) col = CHARS_PER_LINE - 1;
+    cursor_row = row;
+    cursor_col = col;
+}
 
-    uint8_t addr = (row == 0) ? LCD_ROW0_ADDR : LCD_ROW1_ADDR;
-    lcd_send_command(LCD_CMD_SET_DDRAM | (addr + col));
+/**
+ * @brief  Draw a single character at pixel position (px, py) with scaling.
+ */
+static void lcd_draw_char(uint16_t px, uint16_t py, char ch)
+{
+    uint8_t col_data;
+    uint8_t pixel_buf[CHAR_W * CHAR_H * 2];  /* 12*16*2 = 384 bytes */
+    uint16_t buf_idx = 0;
+    uint8_t fx, fy, sx, sy;
+    uint16_t color;
+
+    if (ch < 32 || ch > 126) ch = '?';
+
+    /* Build the character bitmap into pixel_buf (row by row for SPI) */
+    for (fy = 0; fy < FONT_H; fy++) {
+        for (sy = 0; sy < FONT_SCALE; sy++) {
+            for (fx = 0; fx < FONT_W; fx++) {
+                col_data = font5x7[ch - 32][fx];
+                color = (col_data & (1 << fy)) ? text_fg : text_bg;
+                for (sx = 0; sx < FONT_SCALE; sx++) {
+                    pixel_buf[buf_idx++] = (uint8_t)(color >> 8);
+                    pixel_buf[buf_idx++] = (uint8_t)(color & 0xFF);
+                }
+            }
+            /* Inter-character spacing column (background) */
+            for (sx = 0; sx < FONT_SCALE; sx++) {
+                pixel_buf[buf_idx++] = (uint8_t)(text_bg >> 8);
+                pixel_buf[buf_idx++] = (uint8_t)(text_bg & 0xFF);
+            }
+        }
+    }
+    /* Inter-line spacing rows (background) */
+    for (sy = 0; sy < FONT_SCALE; sy++) {
+        for (fx = 0; fx < CHAR_W; fx++) {
+            pixel_buf[buf_idx++] = (uint8_t)(text_bg >> 8);
+            pixel_buf[buf_idx++] = (uint8_t)(text_bg & 0xFF);
+        }
+    }
+
+    /* Blast the character to the display */
+    lcd_set_window(px, py, px + CHAR_W - 1, py + CHAR_H - 1);
+    TFT_DC_DATA();
+    TFT_CS_LOW();
+    HAL_SPI_Transmit(&LCD_SPI, pixel_buf, buf_idx, HAL_MAX_DELAY);
+    TFT_CS_HIGH();
 }
 
 void lcd_print(const char *str)
@@ -185,36 +374,53 @@ void lcd_print(const char *str)
     if (str == NULL) return;
 
     while (*str) {
-        lcd_send_data((uint8_t)*str);
+        if (cursor_col >= CHARS_PER_LINE) {
+            cursor_col = 0;
+            cursor_row++;
+            if (cursor_row >= TOTAL_LINES) cursor_row = 0;
+        }
+        lcd_draw_char(cursor_col * CHAR_W, cursor_row * CHAR_H, *str);
+        cursor_col++;
         str++;
     }
 }
 
 void lcd_print_line(uint8_t row, const char *str)
 {
-    char buffer[LCD_COLS + 1];
+    if (row >= TOTAL_LINES) row = TOTAL_LINES - 1;
 
-    if (row > 1) row = 1;
+    /* Clear the entire row with background color */
+    lcd_fill_rect(0, row * CHAR_H, TFT_WIDTH, CHAR_H, text_bg);
 
-    /* Set cursor to start of the specified row */
-    lcd_set_cursor(row, 0);
-
-    /* Build a 16-character padded string (fills rest with spaces) */
-    memset(buffer, ' ', LCD_COLS);
-    buffer[LCD_COLS] = '\0';
-
+    /* Center the text horizontally */
+    uint8_t len = 0;
     if (str != NULL) {
-        uint8_t len = (uint8_t)strlen(str);
-        if (len > LCD_COLS) len = LCD_COLS;
-        memcpy(buffer, str, len);
+        len = (uint8_t)strlen(str);
+        if (len > CHARS_PER_LINE) len = CHARS_PER_LINE;
     }
 
-    /* Write the full 16 characters to clear any previous content */
-    lcd_print(buffer);
+    uint8_t start_col = (CHARS_PER_LINE - len) / 2;
+    cursor_row = row;
+    cursor_col = start_col;
+
+    if (str != NULL) {
+        uint8_t i;
+        for (i = 0; i < len; i++) {
+            lcd_draw_char(cursor_col * CHAR_W, cursor_row * CHAR_H, str[i]);
+            cursor_col++;
+        }
+    }
+}
+
+void lcd_set_colors(uint16_t fg, uint16_t bg)
+{
+    text_fg = fg;
+    text_bg = bg;
 }
 
 void lcd_backlight(uint8_t on)
 {
-    lcd_backlight_state = on ? LCD_BIT_BL : 0x00;
-    lcd_i2c_write(lcd_backlight_state);
+    /* LED pin is wired directly to 3.3V — always on.
+     * If connected to a GPIO, toggle it here. */
+    (void)on;
 }

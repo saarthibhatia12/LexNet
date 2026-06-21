@@ -4,13 +4,13 @@
  * @details STM32F103C8Tx (Blue Pill) pin mapping for LexNet biometric authentication.
  *
  * Peripherals:
- *   - USB FS (PA11/PA12) : Bridge communication via USB CDC Virtual COM Port (micro USB)
- *   - USART2 (PA2/PA3)   : R307 fingerprint sensor, 57600 8N1
- *   - I2C1   (PB6/PB7)   : 16x2 LCD via PCF8574 I2C adapter
- *   - GPIO   (PB12)      : Piezo buzzer output
- *
- * NOTE: Bridge communication uses USB CDC (not USART1). The micro USB port on
- *       the Blue Pill appears as a Virtual COM Port on the host laptop.
+ *   - USB FS  (PA11/PA12) : Bridge communication via USB CDC Virtual COM Port (micro USB)
+ *   - USART2  (PA2/PA3)   : R307 fingerprint sensor, 57600 8N1
+ *   - SPI1    (PA5/PA7)   : ILI9341 2.8" TFT display (240x320, RGB565)
+ *   - GPIO    (PA4)       : TFT chip select (CS)
+ *   - GPIO    (PB0)       : TFT data/command (DC)
+ *   - GPIO    (PB1)       : TFT hardware reset (RST)
+ *   - GPIO    (PB12)      : Piezo buzzer output
  */
 
 #ifndef __MAIN_H
@@ -39,23 +39,25 @@ extern "C" {
  * @{
  */
 
-/* --- USART1: Bridge Communication (PA9 TX, PA10 RX) --- */
-#define BRIDGE_UART_TX_Pin        GPIO_PIN_9
-#define BRIDGE_UART_TX_Port       GPIOA
-#define BRIDGE_UART_RX_Pin        GPIO_PIN_10
-#define BRIDGE_UART_RX_Port       GPIOA
-
 /* --- USART2: R307 Fingerprint Sensor (PA2 TX, PA3 RX) --- */
 #define FP_UART_TX_Pin            GPIO_PIN_2
 #define FP_UART_TX_Port           GPIOA
 #define FP_UART_RX_Pin            GPIO_PIN_3
 #define FP_UART_RX_Port           GPIOA
 
-/* --- I2C1: LCD PCF8574 Adapter (PB6 SCL, PB7 SDA) --- */
-#define LCD_I2C_SCL_Pin           GPIO_PIN_6
-#define LCD_I2C_SCL_Port          GPIOB
-#define LCD_I2C_SDA_Pin           GPIO_PIN_7
-#define LCD_I2C_SDA_Port          GPIOB
+/* --- SPI1: ILI9341 TFT Display (PA5 SCK, PA7 MOSI) --- */
+#define TFT_SPI_SCK_Pin           GPIO_PIN_5
+#define TFT_SPI_SCK_Port          GPIOA
+#define TFT_SPI_MOSI_Pin          GPIO_PIN_7
+#define TFT_SPI_MOSI_Port         GPIOA
+
+/* --- GPIO: TFT Control Pins --- */
+#define TFT_CS_Pin                GPIO_PIN_4
+#define TFT_CS_Port               GPIOA
+#define TFT_DC_Pin                GPIO_PIN_0
+#define TFT_DC_Port               GPIOB
+#define TFT_RST_Pin               GPIO_PIN_1
+#define TFT_RST_Port              GPIOB
 
 /* --- GPIO: Buzzer (PB12) --- */
 #define BUZZER_PIN                GPIO_PIN_12
@@ -73,17 +75,14 @@ extern "C" {
  * @{
  */
 
-/**
- * @brief USART2 handle — R307 fingerprint sensor (PA2 TX / PA3 RX).
- * Bridge communication is done via USB CDC (CDC_Transmit_FS), not USART1.
- */
+/** @brief USART2 handle — R307 fingerprint sensor (PA2 TX / PA3 RX) */
 #define FP_UART                   huart2
 
-/** @brief I2C1 handle — 16x2 LCD PCF8574 adapter (PB6 SCL / PB7 SDA) */
-#define LCD_I2C                   hi2c1
+/** @brief SPI1 handle — ILI9341 TFT display (PA5 SCK / PA7 MOSI) */
+#define LCD_SPI                   hspi1
 
-extern UART_HandleTypeDef huart2;   /* R307 fingerprint sensor */
-extern I2C_HandleTypeDef  hi2c1;    /* LCD PCF8574 adapter     */
+extern UART_HandleTypeDef huart2;   /* R307 fingerprint sensor  */
+extern SPI_HandleTypeDef  hspi1;    /* ILI9341 TFT display      */
 
 /** @} */
 
@@ -93,7 +92,7 @@ extern I2C_HandleTypeDef  hi2c1;    /* LCD PCF8574 adapter     */
 
 /**
  * @defgroup Constants Application Constants
- * @brief Thresholds, timeouts, sizes, and I2C addresses.
+ * @brief Thresholds, timeouts, and sizes.
  * @{
  */
 
@@ -106,11 +105,11 @@ extern I2C_HandleTypeDef  hi2c1;    /* LCD PCF8574 adapter     */
 #define UART_TIMEOUT              500
 /** Maximum UART TX retries before declaring COMM ERROR */
 #define UART_MAX_RETRIES          3
-/** Baud rate for both USART1 and USART2 */
+/** Baud rate for USART2 (fingerprint sensor) */
 #define UART_BAUD_RATE            57600
 
 /* --- Packet Format --- */
-/** Total UART auth packet size in bytes (device_id[4] + score[2] + timestamp[8] + crc16[2]) */
+/** Total auth packet size in bytes (device_id[4] + score[2] + timestamp[8] + crc16[2]) */
 #define AUTH_PACKET_SIZE          16
 /** Payload size (packet minus CRC field) */
 #define AUTH_PAYLOAD_SIZE         14
@@ -124,16 +123,6 @@ extern I2C_HandleTypeDef  hi2c1;    /* LCD PCF8574 adapter     */
 #define ACK_FAILURE               0xFF
 /** ACK byte: no response received (timeout) */
 #define ACK_TIMEOUT               0x00
-
-/* --- LCD (HD44780 via PCF8574 I2C) --- */
-/** PCF8574 I2C slave address (7-bit: 0x27, shifted: 0x4E). Most common default. */
-#define LCD_ADDR                  0x27
-/** LCD I2C address left-shifted for HAL (HAL expects 8-bit address) */
-#define LCD_ADDR_HAL              (LCD_ADDR << 1)
-/** LCD display columns */
-#define LCD_COLS                  16
-/** LCD display rows */
-#define LCD_ROWS                  2
 
 /* --- Fingerprint Sensor --- */
 /** R307 fingerprint capture timeout in milliseconds */
@@ -180,8 +169,8 @@ void SystemClock_Config(void);
 void MX_GPIO_Init(void);
 /** @brief USART2 initialisation (R307 fingerprint sensor) */
 void MX_USART2_UART_Init(void);
-/** @brief I2C1 initialisation (LCD) */
-void MX_I2C1_Init(void);
+/** @brief SPI1 initialisation (ILI9341 TFT display) */
+void MX_SPI1_Init(void);
 /**
  * @brief Bridge communication initialisation (USB CDC Virtual COM Port).
  * @note  Declared in CubeMX-generated USB_DEVICE/App/usb_device.h.

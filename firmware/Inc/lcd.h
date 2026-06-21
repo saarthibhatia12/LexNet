@@ -1,22 +1,17 @@
 /**
  * @file    lcd.h
- * @brief   HD44780 16x2 LCD driver over I2C PCF8574 adapter.
- * @details Implements 4-bit mode communication with HD44780 LCD controller
- *          through a PCF8574 I2C I/O expander.
+ * @brief   ILI9341 2.8" TFT SPI display driver (240x320, RGB565).
+ * @details Replaces the HD44780 I2C LCD. Uses SPI1 (PA5/PA7) with GPIO
+ *          control pins (PA4=CS, PB0=DC, PB1=RST). Provides the same
+ *          public API (lcd_init, lcd_print_line, etc.) so main.c is unchanged.
  *
- * PCF8574 Pin Mapping:
- *   P0 = RS  (Register Select: 0=command, 1=data)
- *   P1 = RW  (Read/Write: always 0=write)
- *   P2 = EN  (Enable: pulse high→low to latch)
- *   P3 = BL  (Backlight: 1=on, 0=off)
- *   P4 = D4  (LCD data bit 4)
- *   P5 = D5  (LCD data bit 5)
- *   P6 = D6  (LCD data bit 6)
- *   P7 = D7  (LCD data bit 7)
- *
- * HD44780 Row Addresses:
- *   Row 0: 0x00 (columns 0–15)
- *   Row 1: 0x40 (columns 0–15)
+ * SPI Pin Mapping:
+ *   PA5  = SPI1_SCK   → TFT SCK
+ *   PA7  = SPI1_MOSI  → TFT SDI (MOSI)
+ *   PA4  = TFT_CS     → TFT CS  (GPIO output, directly from STM32)
+ *   PB0  = TFT_DC     → TFT DC/RS (GPIO output, 0=command, 1=data)
+ *   PB1  = TFT_RST    → TFT RESET (GPIO output, active low)
+ *   3.3V              → TFT LED  (backlight always on)
  */
 
 #ifndef __LCD_H
@@ -30,82 +25,100 @@ extern "C" {
 #include <stdint.h>
 
 /* ========================================================================== */
-/*                         PCF8574 BIT DEFINITIONS                            */
+/*                         TFT CONTROL PIN MACROS                             */
 /* ========================================================================== */
 
-#define LCD_BIT_RS                0x01  /**< P0: Register Select */
-#define LCD_BIT_RW                0x02  /**< P1: Read/Write (always 0) */
-#define LCD_BIT_EN                0x04  /**< P2: Enable strobe */
-#define LCD_BIT_BL                0x08  /**< P3: Backlight control */
+#define TFT_CS_PIN       GPIO_PIN_4
+#define TFT_CS_PORT      GPIOA
+#define TFT_DC_PIN       GPIO_PIN_0
+#define TFT_DC_PORT      GPIOB
+#define TFT_RST_PIN      GPIO_PIN_1
+#define TFT_RST_PORT     GPIOB
+
+#define TFT_CS_LOW()     HAL_GPIO_WritePin(TFT_CS_PORT, TFT_CS_PIN, GPIO_PIN_RESET)
+#define TFT_CS_HIGH()    HAL_GPIO_WritePin(TFT_CS_PORT, TFT_CS_PIN, GPIO_PIN_SET)
+#define TFT_DC_CMD()     HAL_GPIO_WritePin(TFT_DC_PORT, TFT_DC_PIN, GPIO_PIN_RESET)
+#define TFT_DC_DATA()    HAL_GPIO_WritePin(TFT_DC_PORT, TFT_DC_PIN, GPIO_PIN_SET)
+#define TFT_RST_LOW()    HAL_GPIO_WritePin(TFT_RST_PORT, TFT_RST_PIN, GPIO_PIN_RESET)
+#define TFT_RST_HIGH()   HAL_GPIO_WritePin(TFT_RST_PORT, TFT_RST_PIN, GPIO_PIN_SET)
 
 /* ========================================================================== */
-/*                        HD44780 COMMAND BYTES                               */
+/*                         DISPLAY DIMENSIONS                                 */
 /* ========================================================================== */
 
-#define LCD_CMD_CLEAR             0x01  /**< Clear display */
-#define LCD_CMD_HOME              0x02  /**< Return cursor to home */
-#define LCD_CMD_ENTRY_MODE        0x06  /**< Entry mode: increment, no shift */
-#define LCD_CMD_DISPLAY_ON        0x0C  /**< Display ON, cursor OFF, blink OFF */
-#define LCD_CMD_DISPLAY_OFF       0x08  /**< Display OFF */
-#define LCD_CMD_FUNCTION_SET_4BIT 0x28  /**< 4-bit mode, 2 lines, 5x8 font */
-#define LCD_CMD_SET_DDRAM         0x80  /**< Set DDRAM address (OR with address) */
+#define TFT_WIDTH        240
+#define TFT_HEIGHT       320
 
-/* HD44780 row start addresses */
-#define LCD_ROW0_ADDR             0x00
-#define LCD_ROW1_ADDR             0x40
+/* ========================================================================== */
+/*                         RGB565 COLOR DEFINITIONS                           */
+/* ========================================================================== */
+
+#define COLOR_BLACK      0x0000
+#define COLOR_WHITE      0xFFFF
+#define COLOR_RED        0xF800
+#define COLOR_GREEN      0x07E0
+#define COLOR_BLUE       0x001F
+#define COLOR_YELLOW     0xFFE0
+#define COLOR_CYAN       0x07FF
+#define COLOR_DARK_BG    0x0011   /**< Deep navy background (#000822) */
+#define COLOR_GREY       0x7BEF
+
+/* ========================================================================== */
+/*                      ILI9341 COMMAND DEFINITIONS                           */
+/* ========================================================================== */
+
+#define ILI9341_SWRESET  0x01
+#define ILI9341_SLPOUT   0x11
+#define ILI9341_DISPON   0x29
+#define ILI9341_CASET    0x2A
+#define ILI9341_PASET    0x2B
+#define ILI9341_RAMWR    0x2C
+#define ILI9341_MADCTL   0x36
+#define ILI9341_PIXFMT   0x3A
+
+/* ========================================================================== */
+/*                          TEXT RENDERING CONFIG                             */
+/* ========================================================================== */
+
+/** Font scale factor (each font pixel becomes NxN screen pixels) */
+#define FONT_SCALE       2
+/** Base font dimensions (5x7 pixel font) */
+#define FONT_W           5
+#define FONT_H           7
+/** Rendered character dimensions including spacing */
+#define CHAR_W           ((FONT_W * FONT_SCALE) + FONT_SCALE)   /* 12px */
+#define CHAR_H           ((FONT_H * FONT_SCALE) + FONT_SCALE)   /* 16px */
+/** Characters per line and total lines */
+#define CHARS_PER_LINE   (TFT_WIDTH / CHAR_W)   /* 20 */
+#define TOTAL_LINES      (TFT_HEIGHT / CHAR_H)  /* 20 */
 
 /* ========================================================================== */
 /*                          PUBLIC API FUNCTIONS                              */
 /* ========================================================================== */
 
-/**
- * @brief  Initialise the 16x2 LCD via I2C PCF8574 adapter.
- *
- * Performs the full HD44780 4-bit initialisation sequence:
- *   1. Wait >40ms after power-on
- *   2. Function set (8-bit) x3 for reliable mode entry
- *   3. Switch to 4-bit mode
- *   4. Configure: 2-line, 5x8 font
- *   5. Display ON, cursor OFF
- *   6. Clear display
- *   7. Entry mode: increment, no shift
- *
- * @note Uses the global hi2c1 handle and LCD_ADDR_HAL from main.h.
- */
+/** @brief Initialise ILI9341 via SPI1 — full init sequence + clear to dark bg. */
 void lcd_init(void);
 
-/**
- * @brief  Clear the entire LCD display and return cursor to position (0,0).
- * @note   This command takes ~1.64ms to execute on the HD44780.
- */
+/** @brief Clear the entire screen to the background color. */
 void lcd_clear(void);
 
-/**
- * @brief  Set the cursor position on the LCD.
- * @param  row  Row number: 0 = top row, 1 = bottom row. Values > 1 are clamped.
- * @param  col  Column number: 0–15. Values > 15 are clamped.
- */
+/** @brief Set cursor position in character grid. */
 void lcd_set_cursor(uint8_t row, uint8_t col);
 
-/**
- * @brief  Print a null-terminated string starting at the current cursor position.
- * @param  str  String to display. Characters beyond column 15 are silently dropped.
- *              NULL pointer is safely ignored.
- */
+/** @brief Print string at current cursor position. */
 void lcd_print(const char *str);
 
-/**
- * @brief  Print a string on a specific row, padding with spaces to clear the row.
- * @param  row  Row number: 0 = top, 1 = bottom.
- * @param  str  String to display. Truncated to 16 characters. NULL-safe.
- */
+/** @brief Print string centered on a display row, clearing the row first. */
 void lcd_print_line(uint8_t row, const char *str);
 
-/**
- * @brief  Turn the LCD backlight on or off.
- * @param  on  true = backlight on, false = backlight off.
- */
+/** @brief Backlight control (currently always on — LED wired to 3.3V). */
 void lcd_backlight(uint8_t on);
+
+/** @brief Set text foreground and background colors. */
+void lcd_set_colors(uint16_t fg, uint16_t bg);
+
+/** @brief Fill a rectangular area with a solid color. */
+void lcd_fill_rect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 
 #ifdef __cplusplus
 }

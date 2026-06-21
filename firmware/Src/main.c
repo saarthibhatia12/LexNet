@@ -24,10 +24,11 @@
  *   - Error_Handler() → infinite loop with buzzer_fail()
  *
  * Peripherals:
- *   - USART1 (PA9/PA10, 57600 8N1)  → Python hardware-bridge
- *   - USART2 (PA2/PA3, 57600 8N1)   → R307 fingerprint sensor
- *   - I2C1   (PB6/PB7, 100kHz)      → 16x2 LCD (PCF8574)
- *   - GPIO   (PB12)                  → Piezo buzzer
+ *   - USB FS  (PA11/PA12, USB CDC) → Python hardware-bridge
+ *   - USART2  (PA2/PA3, 57600 8N1) → R307 fingerprint sensor
+ *   - SPI1    (PA5/PA7, 18MHz)     → ILI9341 2.8" TFT display
+ *   - GPIO    (PA4, PB0, PB1)      → TFT CS/DC/RST
+ *   - GPIO    (PB12)               → Piezo buzzer
  */
 
 #include "main.h"
@@ -45,14 +46,10 @@
 /** USART2 handle — R307 fingerprint sensor */
 UART_HandleTypeDef huart2;
 
-/** I2C1 handle — LCD PCF8574 adapter */
-I2C_HandleTypeDef hi2c1;
+/** SPI1 handle — ILI9341 TFT display */
+SPI_HandleTypeDef hspi1;
 
-/*
- * USB CDC handles are declared and managed entirely by the CubeMX-generated
- * middleware (USB_DEVICE/App/usbd_cdc_if.c, Middlewares/ST/STM32_USB_Device_Library).
- * No explicit handle definition is needed here.
- */
+/* USB CDC handles managed by CubeMX middleware. */
 
 /* ========================================================================== */
 /*                        PRIVATE HELPER FUNCTIONS                            */
@@ -172,8 +169,8 @@ static uint8_t send_and_get_ack(uint16_t score)
  * @brief System Clock Configuration
  *
  * HSE 8MHz crystal → PLL x9 → 72MHz SYSCLK
- * APB1 = 36MHz (max for STM32F103, used by USART2, I2C1)
- * APB2 = 72MHz (used by USART1, GPIO)
+ * APB1 = 36MHz (max for STM32F103, used by USART2)
+ * APB2 = 72MHz (used by SPI1, GPIO)
  */
 void SystemClock_Config(void)
 {
@@ -225,27 +222,33 @@ void MX_USART2_UART_Init(void)
 }
 
 /**
- * @brief I2C1 Initialization — LCD PCF8574 adapter (PB6 SCL, PB7 SDA)
+ * @brief SPI1 Initialization — ILI9341 TFT display (PA5 SCK, PA7 MOSI)
+ *
+ * SPI1 runs at 18MHz (72MHz APB2 / prescaler 4).
+ * Mode 0 (CPOL=0, CPHA=0), MSB first, 8-bit, software CS.
  */
-void MX_I2C1_Init(void)
+void MX_SPI1_Init(void)
 {
-    hi2c1.Instance             = I2C1;
-    hi2c1.Init.ClockSpeed      = 100000;  /* 100kHz standard mode */
-    hi2c1.Init.DutyCycle       = I2C_DUTYCYCLE_2;
-    hi2c1.Init.OwnAddress1     = 0;
-    hi2c1.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
-    hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    hi2c1.Init.OwnAddress2     = 0;
-    hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    hi2c1.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
+    hspi1.Instance               = SPI1;
+    hspi1.Init.Mode              = SPI_MODE_MASTER;
+    hspi1.Init.Direction         = SPI_DIRECTION_2LINES;
+    hspi1.Init.DataSize          = SPI_DATASIZE_8BIT;
+    hspi1.Init.CLKPolarity       = SPI_POLARITY_LOW;
+    hspi1.Init.CLKPhase          = SPI_PHASE_1EDGE;
+    hspi1.Init.NSS               = SPI_NSS_SOFT;
+    hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;  /* 72/4 = 18MHz */
+    hspi1.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+    hspi1.Init.TIMode            = SPI_TIMODE_DISABLE;
+    hspi1.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+    hspi1.Init.CRCPolynomial     = 10;
 
-    if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
+    if (HAL_SPI_Init(&hspi1) != HAL_OK) {
         Error_Handler();
     }
 }
 
 /**
- * @brief GPIO Initialization — Buzzer on PB12 as push-pull output
+ * @brief GPIO Initialization — Buzzer (PB12) + TFT control pins (PA4 CS, PB0 DC, PB1 RST)
  */
 void MX_GPIO_Init(void)
 {
@@ -256,14 +259,24 @@ void MX_GPIO_Init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
-    /* Configure PB12 as push-pull output for buzzer */
-    GPIO_InitStruct.Pin   = BUZZER_PIN;
+    /* PA4 = TFT CS (push-pull output, start HIGH = deselected) */
+    GPIO_InitStruct.Pin   = TFT_CS_Pin;
     GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(TFT_CS_Port, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(TFT_CS_Port, TFT_CS_Pin, GPIO_PIN_SET);
+
+    /* PB0 = TFT DC, PB1 = TFT RST (push-pull outputs) */
+    GPIO_InitStruct.Pin   = TFT_DC_Pin | TFT_RST_Pin;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    HAL_GPIO_WritePin(TFT_RST_Port, TFT_RST_Pin, GPIO_PIN_SET);
+
+    /* PB12 = Buzzer (push-pull output, start LOW = off) */
+    GPIO_InitStruct.Pin   = BUZZER_PIN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(BUZZER_PORT, &GPIO_InitStruct);
-
-    /* Ensure buzzer starts OFF */
     HAL_GPIO_WritePin(BUZZER_PORT, BUZZER_PIN, GPIO_PIN_RESET);
 }
 
@@ -304,26 +317,25 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 }
 
 /**
- * @brief  I2C MSP Init — enables clocks and configures GPIO for I2C1.
+ * @brief  SPI MSP Init — configures GPIO for SPI1 (ILI9341 TFT).
  *
- * Called automatically by HAL_I2C_Init(). Configures:
- *   - PB6 = I2C1_SCL (alternate function open-drain)
- *   - PB7 = I2C1_SDA (alternate function open-drain)
+ * Called automatically by HAL_SPI_Init(). Configures:
+ *   - PA5 = SPI1_SCK  (AF push-pull, high speed)
+ *   - PA7 = SPI1_MOSI (AF push-pull, high speed)
  */
-void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c)
+void HAL_SPI_MspInit(SPI_HandleTypeDef *hspi)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    if (hi2c->Instance == I2C1) {
-        /* Enable I2C1 and GPIOB clocks */
-        __HAL_RCC_I2C1_CLK_ENABLE();
-        __HAL_RCC_GPIOB_CLK_ENABLE();
+    if (hspi->Instance == SPI1) {
+        __HAL_RCC_SPI1_CLK_ENABLE();
+        __HAL_RCC_GPIOA_CLK_ENABLE();
 
-        /* PB6 = I2C1_SCL, PB7 = I2C1_SDA (open-drain, required for I2C) */
-        GPIO_InitStruct.Pin   = GPIO_PIN_6 | GPIO_PIN_7;
-        GPIO_InitStruct.Mode  = GPIO_MODE_AF_OD;
+        /* PA5 = SPI1_SCK, PA7 = SPI1_MOSI (AF push-pull) */
+        GPIO_InitStruct.Pin   = GPIO_PIN_5 | GPIO_PIN_7;
+        GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;
         GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     }
 }
 
@@ -356,7 +368,7 @@ int main(void)
 
     /* Initialise communication peripherals */
     MX_USART2_UART_Init();
-    MX_I2C1_Init();
+    MX_SPI1_Init();
 
     /*
      * USB CDC is initialised by MX_USB_DEVICE_Init() which CubeMX generates
@@ -486,7 +498,7 @@ void Error_Handler(void)
 
     /*
      * Attempt to display error on LCD.
-     * This may fail if the I2C peripheral itself is the problem,
+     * This may fail if the SPI peripheral itself is the problem,
      * but it's worth trying.
      */
     lcd_print_line(0, "FATAL ERROR");
