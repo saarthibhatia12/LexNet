@@ -1,2 +1,0 @@
-﻿/* LexNet scaffold */
-

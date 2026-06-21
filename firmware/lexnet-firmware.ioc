@@ -1,1 +1,185 @@
-﻿# LexNet STM32CubeMX project scaffold
+#MicroXplorer Configuration settings - do not modify
+# =============================================================================
+# LexNet Firmware — STM32CubeMX Project Configuration
+# MCU: STM32F103C8Tx (Blue Pill)
+# =============================================================================
+#
+# Peripheral Mapping:
+#   USART1 (PA9/PA10)  — 57600 8N1 — Bridge communication (to Python hardware-bridge)
+#   USART2 (PA2/PA3)   — 57600 8N1 — R307 fingerprint sensor
+#   I2C1   (PB6/PB7)   — 100kHz    — 16x2 LCD via PCF8574 I2C adapter (addr 0x27)
+#   GPIO   (PB12)      — Output    — Piezo buzzer
+#
+# Clock: HSE 8MHz → PLL → 72MHz SYSCLK
+# Debug: SWD (PA13/PA14)
+# =============================================================================
+
+File.Version=6
+KeepUserPlacement=false
+Mcu.Family=STM32F1
+Mcu.IP0=I2C1
+Mcu.IP1=NVIC
+Mcu.IP2=RCC
+Mcu.IP3=SYS
+Mcu.IP4=USART1
+Mcu.IP5=USART2
+Mcu.IPNb=6
+Mcu.Name=STM32F103C8Tx
+Mcu.Package=LQFP48
+Mcu.Pin0=PD0-OSC_IN
+Mcu.Pin1=PD1-OSC_OUT
+Mcu.Pin2=PA2
+Mcu.Pin3=PA3
+Mcu.Pin4=PA9
+Mcu.Pin5=PA10
+Mcu.Pin6=PA13
+Mcu.Pin7=PA14
+Mcu.Pin8=PB6
+Mcu.Pin9=PB7
+Mcu.Pin10=PB12
+Mcu.PinsNb=11
+Mcu.ThirdPartyNb=0
+Mcu.UserConstants=
+Mcu.UserName=STM32F103C8Tx
+
+# --- Clock Configuration ---
+# HSE 8MHz crystal → PLL x9 → 72MHz SYSCLK
+# APB1 = 36MHz (max), APB2 = 72MHz
+RCC.FamilyName=M
+RCC.HSEState=RCC_HSE_ON
+RCC.PLLCLKFreq_Value=72000000
+RCC.PLLMul=RCC_PLL_MUL9
+RCC.PLLSourceVirtualString=RCC_PLLSOURCE_HSE
+RCC.SYSCLKFreq_Value=72000000
+RCC.SYSCLKSource=RCC_SYSCLKSOURCE_PLLCLK
+RCC.APB1CLKDivider=RCC_HCLK_DIV2
+RCC.APB1Freq_Value=36000000
+RCC.APB2Freq_Value=72000000
+RCC.HCLKFreq_Value=72000000
+RCC.FCLKCortexFreq_Value=72000000
+RCC.AHBFreq_Value=72000000
+RCC.USBFreq_Value=48000000
+RCC.IPParameters=FamilyName,HSEState,PLLCLKFreq_Value,PLLMul,PLLSourceVirtualString,SYSCLKFreq_Value,SYSCLKSource,APB1CLKDivider,APB1Freq_Value,APB2Freq_Value,HCLKFreq_Value,FCLKCortexFreq_Value,AHBFreq_Value,USBFreq_Value
+
+# --- Pin Configuration ---
+# PA2 = USART2_TX (R307 fingerprint sensor TX)
+PA2.Mode=Asynchronous
+PA2.Signal=USART2_TX
+PA2.GPIO_Label=FP_UART_TX
+
+# PA3 = USART2_RX (R307 fingerprint sensor RX)
+PA3.Mode=Asynchronous
+PA3.Signal=USART2_RX
+PA3.GPIO_Label=FP_UART_RX
+
+# PA9 = USART1_TX (Bridge communication TX)
+PA9.Mode=Asynchronous
+PA9.Signal=USART1_TX
+PA9.GPIO_Label=BRIDGE_UART_TX
+
+# PA10 = USART1_RX (Bridge communication RX)
+PA10.Mode=Asynchronous
+PA10.Signal=USART1_RX
+PA10.GPIO_Label=BRIDGE_UART_RX
+
+# PA13 = SYS_JTMS-SWDIO (Debug — do not remap)
+PA13.Mode=Serial_Wire
+PA13.Signal=SYS_JTMS-SWDIO
+
+# PA14 = SYS_JTCK-SWCLK (Debug — do not remap)
+PA14.Mode=Serial_Wire
+PA14.Signal=SYS_JTCK-SWCLK
+
+# PB6 = I2C1_SCL (LCD PCF8574 adapter)
+PB6.Mode=I2C
+PB6.Signal=I2C1_SCL
+PB6.GPIO_Label=LCD_I2C_SCL
+
+# PB7 = I2C1_SDA (LCD PCF8574 adapter)
+PB7.Mode=I2C
+PB7.Signal=I2C1_SDA
+PB7.GPIO_Label=LCD_I2C_SDA
+
+# PB12 = GPIO_Output (Buzzer)
+PB12.GPIOParameters=GPIO_Label,GPIO_Speed
+PB12.GPIO_Label=BUZZER_PIN
+PB12.GPIO_Speed=GPIO_SPEED_FREQ_LOW
+PB12.Locked=true
+PB12.Signal=GPIO_Output
+
+# PD0 = RCC_OSC_IN (8MHz HSE crystal)
+PD0-OSC_IN.Mode=HSE-External-Oscillator
+PD0-OSC_IN.Signal=RCC_OSC_IN
+
+# PD1 = RCC_OSC_OUT (8MHz HSE crystal)
+PD1-OSC_OUT.Mode=HSE-External-Oscillator
+PD1-OSC_OUT.Signal=RCC_OSC_OUT
+
+# --- USART1 Configuration (Bridge comms) ---
+USART1.BaudRate=57600
+USART1.WordLength=WORDLENGTH_8B
+USART1.StopBits=STOPBITS_1
+USART1.Parity=PARITY_NONE
+USART1.Mode=MODE_TX_RX
+USART1.HwFlowCtl=HWCONTROL_NONE
+USART1.OverSampling=OVERSAMPLING_16
+USART1.IPParameters=BaudRate,WordLength,StopBits,Parity,Mode,HwFlowCtl,OverSampling
+
+# --- USART2 Configuration (R307 fingerprint sensor) ---
+USART2.BaudRate=57600
+USART2.WordLength=WORDLENGTH_8B
+USART2.StopBits=STOPBITS_1
+USART2.Parity=PARITY_NONE
+USART2.Mode=MODE_TX_RX
+USART2.HwFlowCtl=HWCONTROL_NONE
+USART2.OverSampling=OVERSAMPLING_16
+USART2.IPParameters=BaudRate,WordLength,StopBits,Parity,Mode,HwFlowCtl,OverSampling
+
+# --- I2C1 Configuration (LCD PCF8574 adapter) ---
+I2C1.I2C_Mode=I2C_Standard
+I2C1.ClockSpeed=100000
+I2C1.DutyCycle=I2C_DUTYCYCLE_2
+I2C1.OwnAddress=0
+I2C1.AddressingMode=I2C_ADDRESSINGMODE_7BIT
+I2C1.DualAddressMode=I2C_DUALADDRESS_DISABLE
+I2C1.GeneralCallMode=I2C_GENERALCALL_DISABLE
+I2C1.NoStretchMode=I2C_NOSTRETCH_DISABLE
+I2C1.IPParameters=I2C_Mode,ClockSpeed,DutyCycle,OwnAddress,AddressingMode,DualAddressMode,GeneralCallMode,NoStretchMode
+
+# --- SYS Configuration ---
+SYS.IPParameters=
+VP_SYS_VS_Systick.Mode=SysTick
+VP_SYS_VS_Systick.Signal=SYS_VS_Systick
+
+# --- NVIC Configuration ---
+NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.DebugMonitor_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.ForceEnableDMA498=true
+NVIC.HardFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.MemoryManagement_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.NonMaskableInt_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.PendSV_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.PriorityGroup=NVIC_PRIORITYGROUP_4
+NVIC.SVCall_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.SysTick_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.UsageFault_IRQn=true\:0\:0\:false\:false\:true\:false\:false\:false
+NVIC.USART1_IRQn=true\:1\:0\:true\:false\:true\:true\:true\:true
+NVIC.USART2_IRQn=true\:2\:0\:true\:false\:true\:true\:true\:true
+
+# --- Project Settings ---
+ProjectManager.ProjectBuildStruct=0
+ProjectManager.ProjectName=lexnet-firmware
+ProjectManager.ProjectFileName=lexnet-firmware.ioc
+ProjectManager.BackupPrev498=false
+ProjectManager.DeletePrevGen=true
+ProjectManager.FreePins=false
+ProjectManager.HalAssertFull=false
+ProjectManager.HeapSize=0x200
+ProjectManager.StackSize=0x400
+ProjectManager.LibraryCopy=1
+ProjectManager.MainLocation=Src/main.c
+ProjectManager.UnderRoot=false
+ProjectManager.functionlistsort=1-MX_GPIO_Init-GPIO-false-HAL-true,2-MX_USART1_UART_Init-USART1-false-HAL-true,3-MX_USART2_UART_Init-USART2-false-HAL-true,4-MX_I2C1_Init-I2C1-false-HAL-true,5-SystemClock_Config-RCC-false-HAL-false
+ProjectManager.CoupleFile=false
+ProjectManager.DeviceId=STM32F103C8Tx
+ProjectManager.ProjectStructure=

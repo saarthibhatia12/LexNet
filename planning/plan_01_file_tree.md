@@ -156,18 +156,20 @@ lexnet/
 │   ├── Inc/
 │   │   ├── main.h                   # Pin definitions, constants, function prototypes
 │   │   ├── fingerprint.h            # R307 driver prototypes: fp_init, fp_capture, fp_match, fp_get_score
-│   │   ├── oled.h                   # SSD1306 driver prototypes: oled_init, oled_clear, oled_print
+│   │   ├── lcd.h                    # HD44780 LCD driver prototypes: lcd_init, lcd_clear, lcd_print, lcd_set_cursor
 │   │   ├── uart_comm.h             # UART TX prototypes: send_auth_packet, receive_ack
 │   │   ├── buzzer.h                # Buzzer prototypes: buzzer_success, buzzer_fail
 │   │   └── crc16.h                 # CRC-16/CCITT for STM32 side
 │   ├── Src/
-│   │   ├── main.c                  # System init, super-loop: wait for fingerprint → build packet → send UART → read ACK → buzzer/OLED
+│   │   ├── main.c                  # System init, super-loop: wait for fingerprint → build packet → send UART → read ACK → buzzer/LCD
 │   │   ├── fingerprint.c           # R307 UART driver: initialize, capture image, search, get score
-│   │   ├── oled.c                  # SSD1306 I2C driver: init, clear, write string at row/col
+│   │   ├── lcd.c                   # HD44780 16x2 LCD I2C driver: init, clear, set cursor, write string
 │   │   ├── uart_comm.c            # Pack 16-byte struct, UART transmit, receive 1-byte ACK
 │   │   ├── buzzer.c               # GPIO toggle for success (2 short beeps) / fail (1 long beep)
 │   │   └── crc16.c                # CRC-16 lookup table implementation
-│   ├── lexnet-firmware.ioc         # STM32CubeMX project file (pin config reference)
+│   ├── tests/
+│   │   └── test_crc16.c            # Host-compilable CRC cross-validation test (gcc, no HAL)
+│   ├── lexnet-firmware.ioc         # STM32CubeMX project file (STM32F103C8Tx pin config reference)
 │   └── README.md                   # Firmware module — build with STM32CubeIDE, flash via ST-Link
 │
 ├── frontend/

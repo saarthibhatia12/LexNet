@@ -7,14 +7,14 @@
 
 ## Module 1 — Firmware (`firmware/`)
 
-> **Tech**: C (STM32CubeIDE), STM32 F446RE, R307 fingerprint sensor, SSD1306 OLED, buzzer
+> **Tech**: C (STM32CubeIDE), STM32F103C8Tx (Blue Pill), R307 fingerprint sensor, 16×2 LCD (HD44780, I2C PCF8574 adapter), buzzer
 > **Total files**: ~12 | **Estimated effort**: 20-25 hours
 
 ### Phase F1 — Project Setup + CRC (2-3 hrs)
 | File | What to do |
 |------|------------|
-| `lexnet-firmware.ioc` | Open STM32CubeMX → configure USART2 (57600 8N1), I2C1 (400kHz), GPIO pins for buzzer. Generate HAL code |
-| `Inc/main.h` | Define pin macros (`FP_UART`, `OLED_I2C`, `BUZZER_PIN`), constants (`SCORE_THRESHOLD=60`, `UART_TIMEOUT=500`), function prototypes |
+| `lexnet-firmware.ioc` | Open STM32CubeMX → configure USART1 (57600 8N1, PA9/PA10), USART2 (57600 8N1, PA2/PA3 — R307 fingerprint), I2C1 (100kHz, PB6/PB7 — LCD PCF8574 adapter), GPIO PB12 for buzzer. Generate HAL code |
+| `Inc/main.h` | Define pin macros (`FP_UART`, `LCD_I2C`, `BUZZER_PIN`), constants (`SCORE_THRESHOLD=60`, `UART_TIMEOUT=500`, `LCD_ADDR=0x27`), function prototypes |
 | `Inc/crc16.h` | Prototype: `uint16_t crc16_ccitt(const uint8_t *data, uint16_t len)` |
 | `Src/crc16.c` | CRC-16/CCITT lookup table (poly 0x1021, init 0xFFFF). **This MUST match** the Python bridge's CRC — test with the same byte sequence |
 
@@ -25,11 +25,11 @@
 ### Phase F2 — Peripheral Drivers (5-7 hrs)
 | File | What to do |
 |------|------------|
-| `Inc/oled.h` + `Src/oled.c` | SSD1306 I2C driver: `oled_init()`, `oled_clear()`, `oled_print(text)`, `oled_print_line(line, text)`. Include 5×7 font table |
-| `Inc/fingerprint.h` + `Src/fingerprint.c` | R307 UART1 driver: `fp_init(huart)`, `fp_capture()`, `fp_match(&score)`, `fp_get_score(&score)`. Handle 10s capture timeout |
-| `Inc/buzzer.h` + `Src/buzzer.c` | GPIO buzz: `buzzer_success()` (2×100ms beep), `buzzer_fail()` (1×500ms beep) |
+| `Inc/lcd.h` + `Src/lcd.c` | HD44780 16×2 LCD over I2C PCF8574 adapter driver: `lcd_init()`, `lcd_clear()`, `lcd_set_cursor(row, col)`, `lcd_print(text)`, `lcd_print_line(row, text)`. Implements 4-bit mode over PCF8574 bit-banging via I2C HAL. Backlight control via PCF8574 P3 bit |
+| `Inc/fingerprint.h` + `Src/fingerprint.c` | R307 UART2 driver (PA2/PA3): `fp_init(huart)`, `fp_capture()`, `fp_match(&score)`, `fp_get_score(&score)`. Handle 10s capture timeout |
+| `Inc/buzzer.h` + `Src/buzzer.c` | GPIO buzz on PB12: `buzzer_success()` (2×100ms beep), `buzzer_fail()` (1×500ms beep) |
 
-**✅ Done when**: Each peripheral works independently — OLED shows text, fingerprint captures and matches, buzzer beeps.
+**✅ Done when**: Each peripheral works independently — LCD displays text on both rows, fingerprint captures and matches, buzzer beeps.
 
 ---
 
@@ -45,19 +45,19 @@
 ### Phase F4 — Main Loop Integration (3-4 hrs)
 | File | What to do |
 |------|------------|
-| `Src/main.c` | HAL init → peripheral init → super-loop: display "Place finger" → capture → match → if match: build packet, send, wait ACK, display result + buzzer. 500ms delay between scans |
+| `Src/main.c` | HAL init → peripheral init → super-loop: LCD shows "Place Finger..." on row 1 → capture → match → if match: LCD shows "Auth OK", build packet, send via USART1, wait ACK, display ACK result + buzzer. On fail: LCD shows "Auth FAIL". 500ms delay between scans |
 
-**✅ Done when**: Full demo works — finger scan → OLED feedback → UART packet sent → ACK received → buzzer confirmation. Test with the Hardware Bridge simulator.
+**✅ Done when**: Full demo works — finger scan → LCD feedback → UART packet sent → ACK received → buzzer confirmation. Test with the Hardware Bridge simulator.
 
 ---
 
 ### Phase F5 — Edge Cases + Polish (2-3 hrs)
-- UART TX timeout → retry 3x before "COMM ERROR"
-- Fingerprint sensor not responding → "SENSOR ERR" + infinite retry
-- Buffer overflow protection on UART RX
+- UART TX timeout → retry 3x before LCD shows "COMM ERROR" on row 2
+- Fingerprint sensor not responding → LCD shows "SENSOR ERR" + infinite retry
+- Buffer overflow protection on UART1 RX
 - `Error_Handler()` → infinite loop with `buzzer_fail()`
 
-**✅ Done when**: All error scenarios produce correct OLED messages and buzzer patterns.
+**✅ Done when**: All error scenarios produce correct LCD messages and buzzer patterns.
 
 ---
 ---
@@ -521,7 +521,7 @@ After all modules are built, test both workflows:
 
 ### Workflow A — Document Registration
 ```
-Fingerprint scan → OLED feedback → UART packet → Python bridge → JWT →
+Fingerprint scan → LCD feedback → UART packet → Python bridge → JWT →
 Node.js API auth → File upload → SHA-256 hash → AES-256 encrypt → IPFS upload →
 Blockchain store → QR generate → PDF embed → NLP trigger →
 OCR → NER → Relations → Neo4j insert → Conflict score
